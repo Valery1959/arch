@@ -1,0 +1,31 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+}
+
+what="$1"; [ -z "$what" ] && { echo "Usage: $(basename $0) plasma-desktop||plasma-meta|plasma|apps|<package>"; exit -1; }
+
+# essential KDE apps
+system="dolphin ksystemlog partitionmanager"
+utils="konsole kate kcharselect kweather"
+multi="kdenlive"
+graph="gwenview okular"
+#games="kbreakout knights"
+other="alacritty"
+
+apps="$system $utils $multi $graph $games $other"
+
+case $what in
+  plasma-desktop|plasma-meta|plasma) sddm=1; packages="sddm $what"  ;;
+  apps) packages="$apps";;
+     *) packages="$what" ;;
+esac
+
+run sudo pacman -S --noconfirm --needed $packages
+
+[ ! -z "$sddm" ] && run sudo systemctl enable sddm
+
+exit 0
+

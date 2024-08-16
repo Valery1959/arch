@@ -1,0 +1,30 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+}
+
+what="$1"; [ -z "$what" ] && { echo "Usage: $(basename $0) gnome|apps|<package>"; exit -1; }
+
+# essential GNOME apps
+system="gnome-terminal gnome-tweaks"
+utils=""
+multi=""
+graph=""
+other="alacritty"
+
+apps="$system $utils $multi $graph $games $other"
+
+case $what in
+  gnome) gdm=1; packages="gdm $what"  ;;
+  apps) packages="$apps";;
+     *) packages="$what" ;;
+esac
+
+run sudo pacman -S --noconfirm --needed $packages
+
+[ ! -z "$gdm" ] && run sudo systemctl enable gdm
+
+exit 0
+

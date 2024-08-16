@@ -1,0 +1,31 @@
+#!/bin/bash
+# installl kvm specific packages
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+}
+
+echo "Install virtiofsd"
+
+run sudo pacman -S --needed --noconfirm virtiofsd
+
+u=$(whoami)
+d=/shared
+
+echo "Create shared dir $d for user $u"
+# sudo su; # mkdir -p $d;chown $u $d;chgrp $u $d;mount -v -t virtiofs host_shared $d
+run sudo mkdir -p $d
+run sudo chown $u $d
+run sudo chgrp $u $d
+run sudo mount -v -t virtiofs host_shared $d
+
+run /shared/scripts/kvm/add_shared_mount.sh
+
+echo "Install spice-vdagent"
+run sudo pacman -S spice-vdagent --noconfirm --needed
+run sudo systemctl start spice-vdagentd
+run sudo systemctl enable spice-vdagentd
+
+exit 0
+
