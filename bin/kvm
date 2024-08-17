@@ -11,16 +11,31 @@ echo "Install virtiofsd"
 run sudo pacman -S --needed --noconfirm virtiofsd
 
 u=$(whoami)
-d=/shared
+d="$1"; [ -z "$d" ] && d=/shared
+h="$2"; [ -z "$h" ] && h=host_shared
 
-echo "Create shared dir $d for user $u"
+echo "Create shared dir $d for user $u on virtiofs target path $h"
 # sudo su; # mkdir -p $d;chown $u $d;chgrp $u $d;mount -v -t virtiofs host_shared $d
 run sudo mkdir -p $d
 run sudo chown $u $d
 run sudo chgrp $u $d
-run sudo mount -v -t virtiofs host_shared $d
+run sudo mount -v -t virtiofs $h $d
 
-run /shared/scripts/kvm/add_shared_mount.sh
+file="/etc/fstab"
+line="$h $d  virtiofs  defaults 0 0"
+
+echo "Amend $file, adding $d virtiofs directory"
+if ! grep -qxF "$line" "$file"; then
+  echo "Adding $line to $file"
+  sudo sed -i '/./!d' $file
+  sudo sed -i '$a'"$line" $file
+  tail -n 3 $file
+  echo "remount $d directory"
+  run sudo systemctl daemon-reload
+  run sudo mount -va
+else
+  echo "$file already has $line"
+fi
 
 echo "Install spice-vdagent"
 run sudo pacman -S spice-vdagent --noconfirm --needed
