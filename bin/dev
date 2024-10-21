@@ -1,6 +1,8 @@
 #!/bin/bash
 # install development packages
 
+script_dir=$(cd $(dirname $0); pwd -P)
+
 run()
 {
   echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
@@ -31,8 +33,9 @@ run()
 # avahi (mDNS/DNS-SD/Bonjour stack) - installed
 # yay (AUR) (AUR helper)            - specific install
 # reflector (Arch mirror updater) 
+# inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
 
-packages="fastfetch neofetch neovim git tmux htop btop zsh less reflector"
+packages="fastfetch neofetch neovim git tmux htop btop zsh less reflector inetutils"
 
 # CLI tools
 # tree (Directory listing)
@@ -43,8 +46,14 @@ packages="fastfetch neofetch neovim git tmux htop btop zsh less reflector"
 # whois (Whois client)
 # wget (CLI downloader)
 # rlwrap (Readline wrapper)
+# bat (cat with syntax highlighting)
+# ripgrep (Regexp grep)
+# fd (Fast find)
+# gdu (Disk usage analyzer (Go))
+# lazygit (GIT tool)
+# bottom (System monitor)
 
-packages="$packages tree fzf jq zip unzip whois wget rlwrap"
+packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom"
 
 # Development
 # base-devel (Basic Build Tools)

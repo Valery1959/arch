@@ -1,0 +1,12 @@
+#!/bin/bash
+# Upgrade system
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+}
+
+run sudo pacman -Syu
+
+exit 0
+

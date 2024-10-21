@@ -1,0 +1,12 @@
+#!/bin/bash
+# start nvim for wxWidget based project
+# this has to be run once for each compiler to initial setup build/compile_commands.json
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+$script_dir/fix_compile_commands_json_link # fix link to compile_commands.json
+
+nvim .
+
+exit 0
+
