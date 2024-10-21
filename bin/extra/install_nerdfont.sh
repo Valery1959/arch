@@ -9,16 +9,19 @@ run()
   echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
 }
 
-[ -z "$1" ] && font="Mononoki.zip" || font=$1
+url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1"
 
-font=$script_dir/$font
+[ -z "$1" ] && file="Mononoki.zip" || file=$1
+
+font="/tmp/$file"
+
+run curl -Lo $font $url/$file
 
 [ ! -f $font ] && { echo "font file $font does not exists"; exit 1; }
 
-# unzip font
-run unzip $font -d ~/.fonts
-
-# install font
+# unzip and install font
+run unzip -o $font -d ~/.fonts
+run rm $font
 run fc-cache -fv
 
 # check font installed
