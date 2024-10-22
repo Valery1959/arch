@@ -84,5 +84,7 @@ if [ $? -ne 0 ] ; then
   run yay visual-studio-code-bin --noconfirm --needed
 fi
 
+run $script_dir/dev_extra/install.sh
+
 exit 0
 
