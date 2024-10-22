@@ -14,6 +14,8 @@ echo "Install ~/bin"
 run mkdir -p ~/bin
 run cp $script_dir/up ~/bin
 run cp $script_dir/nv ~/bin
+run cp $script_dir/po ~/bin
+run cp $script_dir/fix_compile_commands_json_link ~/bin
 
 echo "Install nerd fonts"
 run $script_dir/install_nerdfont.sh Mononoki.zip

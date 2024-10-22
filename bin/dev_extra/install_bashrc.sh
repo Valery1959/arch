@@ -2,7 +2,7 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-cp .functions.bash ~/
+cp $script_dir/.functions.bash ~/
 
 update_file()
 {

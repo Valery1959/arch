@@ -1,0 +1,33 @@
+#!/bin/bash
+
+host=$(hostname -s)
+
+cmd_json="compile_commands.json"; [ ! -h $cmd_json ] && exit 0 
+
+src_dbg='/build\..*/Debug/'
+src_rel='/build\..*/Release/'
+dst_dbg="/build.$host/Debug/"
+dst_rel="/build.$host/Release/"
+
+src_link=$(readlink -e $cmd_json);  [ ! -f $src_link ] && { echo "$src_link does not exist"; exit 1 ; }
+
+relink()
+{
+  echo "relink $cmd_json to $1"
+  rm $cmd_json; ln -s $1 $cmd_json
+}
+
+res=$(printf "%s" $src_link | sed -e "s|$src_dbg|$dst_dbg|g")
+if [ -f $res ] && [[ "$src_link" != "$res" ]] ; then
+  relink "$res"
+  exit 0
+fi
+
+res=$(printf "%s" $src_link | sed -e "s|$src_rel|$dst_rel|g")
+if [ -f $res ] && [[ "$src_link" != "$res" ]] ; then
+  relink "$res"
+  exit 0
+fi
+
+exit 0
+
