@@ -22,8 +22,8 @@ run cp $script_dir/fix_compile_commands_json_link ~/bin
 
 echo "Install nerd fonts"
 run $script_dir/install_nerdfont.sh Mononoki.zip
-run $script_dir/install_nerdfont_$sdir.sh JetBrainsMono.zip JetBrainsMonoNerdFont
-run $script_dir/install_nerdfont_$sdir.sh Meslo.zip MesloLGSNerdFont
+run $script_dir/install_nerdfont.sh JetBrainsMono.zip JetBrainsMonoNerdFont
+run $script_dir/install_nerdfont.sh Meslo.zip MesloLGSNerdFont
 
 echo "Install Rust"
 run $script_dir/install_rust.sh

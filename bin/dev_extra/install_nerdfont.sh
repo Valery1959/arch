@@ -11,7 +11,8 @@ run()
 
 url="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1"
 
-[ -z "$1" ] && file="Mononoki.zip" || file=$1
+[   -z "$1" ] && file="Mononoki.zip" || file=$1
+[ ! -z "$2" ] && filt="$2"'*'
 
 font="/tmp/$file"
 
@@ -20,7 +21,7 @@ run curl -Lo $font $url/$file
 [ ! -f $font ] && { echo "font file $font does not exists"; exit 1; }
 
 # unzip and install font
-run unzip -o $font $2'*' -d ~/.fonts
+run unzip -o $font $filt -d ~/.fonts
 run rm $font
 run fc-cache -fv
 
