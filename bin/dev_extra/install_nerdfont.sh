@@ -20,7 +20,7 @@ run curl -Lo $font $url/$file
 [ ! -f $font ] && { echo "font file $font does not exists"; exit 1; }
 
 # unzip and install font
-run unzip -o $font -d ~/.fonts
+run unzip -o $font $2'*' -d ~/.fonts
 run rm $font
 run fc-cache -fv
 
