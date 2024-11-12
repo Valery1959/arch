@@ -7,11 +7,11 @@ run()
   echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
 }
 
-echo "Install .bashrc"
-run $script_dir/install_bashrc.sh
+echo "Install .zshrc"
+run $script_dir/install_zsh.sh
 
 echo "Install .bashrc"
-run $script_dir/install_zsh.sh
+run $script_dir/install_bashrc.sh
 
 echo "Install ~/bin"
 run mkdir -p ~/bin

@@ -27,3 +27,7 @@ update_path()
 update_file "$HOME/.bashrc"
 update_path "$HOME/.bashrc"
 
+if [ -f $HOME/.zshrc ] ; then
+  update_file "$HOME/.zshrc"
+  update_path "$HOME/.zshrc"
+fi
