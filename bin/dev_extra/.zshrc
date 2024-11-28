@@ -26,7 +26,7 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases, like in bash
-alias ll='ls -alF'
+alias ll='ls -al'
 alias la='ls -A'
 alias l='ls -CF'
 # End of lines configured manually
