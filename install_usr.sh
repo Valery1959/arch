@@ -70,10 +70,10 @@ echo "Install other essential packages"
 run pacman -S --noconfirm --needed networkmanager grub efibootmgr openssh rsync vim $microcode
 
 # echo "Create initial ramdisk environment"
-# run mkinitcpio -p linux
+run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
-run grub-install --efi-directory /boot/efi
+run grub-install --efi-directory /boot/efi --bootloader-id=Arch
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
