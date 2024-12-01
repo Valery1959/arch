@@ -44,8 +44,8 @@ run mv $install_log $install_usr
 
 run chown -R $install_usr/arch --reference $install_usr
 run chown $install_usr/install.log --reference $install_usr
-#run umount -A -R -q /mnt
+run umount -A -R -q /mnt
 
-#reboot
+reboot
 
 exit 0

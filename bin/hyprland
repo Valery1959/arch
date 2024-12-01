@@ -1,0 +1,50 @@
+#!/bin/bash
+# install development packages
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+}
+
+# base-devel (Basic Build Tools)
+# less (opposite of more)
+# git (GIT tool)
+# hyprland (AUR, desktop manager) - specific install
+
+packages="base-devel git less"
+
+run sudo pacman -S --noconfirm --needed $packages
+
+which yay >/dev/null 2>&1
+if [ $? -ne 0 ] ; then
+  run git clone https://aur.archlinux.org/yay.git
+  cd yay; makepkg -si --noconfirm --needed; cd
+  run rm -rf yay
+fi
+
+echo "Troubleshooting for Hyprland 0.45.2 under kvm:"
+printf "%s" "  downgrade aquamarine to 0.4.5-1 and hyprland to 0.45.0-1 ? (y|n) "
+read  answer
+
+if [[ $answer = "y" ]] || [[ $answer = "Y" ]]  ; then
+  which downgrade >/dev/null 2>&1
+  if [ $? -ne 0 ] ; then
+    run yay -S downgrade
+  fi
+
+  run sudo downgrade aquamarine hyprland
+
+  echo "1. In Video Virtio please make sure that 3D acceleration is enabled (model is Virtio)"
+  echo "2. In Display Spice please make sure that Listen type is set to None and OpenGL is ienabled."
+  echo "3. Login via Hyprland session (not Hyprland systemd)"
+
+else
+  run sudo pacman -S --noconfirm --needed hyprland
+fi
+
+run yay -S ml4w-hyprland
+run ml4w-hyprland-setup
+
+exit 0

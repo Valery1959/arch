@@ -12,8 +12,7 @@ host_name="$1"
 user_name="$2"
 pass_word="$3"
 time_zone="$4"
-
-disk=$5
+disk_path="$5"
 
 echo "Installing arch chroot"
 echo "Hostname: $host_name"
@@ -72,11 +71,11 @@ echo "Install other essential packages"
 #run pacman -S --noconfirm --needed networkmanager grub efibootmgr openssh rsync vim $microcode
 run pacman -S --noconfirm --needed networkmanager grub efibootmgr dosfstools os-prober mtools openssh rsync vim $microcode
 
-# echo "Create initial ramdisk environment"
+echo "Create initial ramdisk environment"
 run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
-run grub-install --efi-directory /boot/efi --bootloader-id=Arch --recheck $disk
+run grub-install --efi-directory /boot/efi --bootloader-id=Arch --recheck $disk_path
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
