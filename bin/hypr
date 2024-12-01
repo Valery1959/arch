@@ -35,7 +35,8 @@ run()
 # reflector (Arch mirror updater) 
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
 
-packages="hyprland"
+packages="git less"
+#packages="hyprland"
 
 # CLI tools
 # tree (Directory listing)
