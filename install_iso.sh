@@ -137,7 +137,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #run cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 run cp -r ${dir} /mnt/root
 
-( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" )
+( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$disk")
 
 run touch /mnt/root/arch.exit.$?
 
