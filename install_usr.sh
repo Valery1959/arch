@@ -75,7 +75,8 @@ echo "Create initial ramdisk environment"
 run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
-run grub-install --efi-directory /boot/efi --bootloader-id=Arch --recheck $disk_path
+#run grub-install --efi-directory /boot/efi --bootloader-id=grub --recheck $disk_path
+run grub-install --efi-directory /boot --bootloader-id=grub --recheck $disk_path
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
