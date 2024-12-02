@@ -93,13 +93,12 @@ umount -A -R -q /mnt # just for sure, exits with code 1 if no mount
 disk="/dev/$disk"
 par1=${disk}${p}1
 par2=${disk}${p}2
-#par3=${disk}${p}3
+par3=${disk}${p}3
 
 echo "Disk $disk will be partitioned as follows"
 echo " EFI: $par1 : vfat"
-#echo "BOOT: $par2 : ext4"
-#echo "ROOT: $par3 : ext4"
-echo "ROOT: $par2 : ext4"
+echo "BOOT: $par2 : ext4"
+echo "ROOT: $par3 : ext4"
 
 # formatting disk, as follows:
 # 1. Zap (destroy) the GPT and MBR data structures
@@ -114,20 +113,16 @@ echo "Format $disk and mound partitions"
 run sgdisk -Z ${disk}
 run sgdisk -a 2048 -o ${disk} 
 run sgdisk -n 1::+550M -t 1:ef00 -c 1:EFI ${disk}
-#run sgdisk -n 2::+1G   -t 2:8300 -c 2:BOOT ${disk}
-#run sgdisk -n 3::-0    -t 3:8300 -c 3:ROOT ${disk}
-run sgdisk -n 2::-0    -t 2:8300 -c 2:ROOT ${disk}
+run sgdisk -n 2::+1G   -t 2:8300 -c 2:BOOT ${disk}
+run sgdisk -n 3::-0    -t 3:8300 -c 3:ROOT ${disk}
 run partprobe ${disk} 
 
 run mkfs.fat -F32 -n EFI $par1
-#run mkfs.ext4 -L BOOT $par2
-#run mkfs.ext4 -L ROOT $par3
-run mkfs.ext4 -L ROOT $par2
+run mkfs.ext4 -L BOOT $par2
+run mkfs.ext4 -L ROOT $par3
 
-#run mount $par3 /mnt
-#run mount -m $par2 /mnt/boot
-#run mount -m $par1 /mnt/boot/efi 
-run mount $par2 /mnt
+run mount $par3 /mnt
+run mount -m $par2 /mnt/boot
 run mount -m $par1 /mnt/boot/efi 
 
 echo "Install essential packages (minimal)"
@@ -142,7 +137,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #run cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 run cp -r ${dir} /mnt/root
 
-( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$disk")
+( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local")
 
 run touch /mnt/root/arch.exit.$?
 
