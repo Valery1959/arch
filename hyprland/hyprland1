@@ -74,7 +74,7 @@ else
   run sudo pacman -S --noconfirm --needed hyprland
 fi
 
-run yay -S ml4w-hyprland
-run ml4w-hyprland-setup
+#run yay -S ml4w-hyprland
+#run ml4w-hyprland-setup
 
 exit 0
