@@ -17,9 +17,9 @@ update_file()
 update_path()
 {
   file=$1
-  echo "Updating $file with export PATH=\$HOME/bin:\$PATH"
+  echo "Updating $file with export PATH=\$HOME/bin:\$HOME/.cargo/bin:\$PATH"
   [ ! -f $file ] && run touch $file
-  line='export PATH=$HOME/bin:$PATH'
+  line='export PATH=$HOME/bin:$HOME/.cargo/bin:$PATH'
   grep -qxF "$line" "$file" || echo -e "\n# support user's home bin\n$line" >> "$file"
   tail -n 3 "$file"
 }
