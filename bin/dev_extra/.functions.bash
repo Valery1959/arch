@@ -64,3 +64,13 @@ rff() {
 cdp() {
   cd /shared/projects; ccd $1; nvim .
 }
+
+y() {
+  which yazi > /dev/null 2>&1; [ $? -ne 0 ] && { echo "yazi not found"; return 1; }
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+  builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
+}
