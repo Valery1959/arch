@@ -12,49 +12,48 @@ run()
 which yay >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
 which git >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
 
-echo "Update package database"
-run sudo pacman -Syu
+#echo "Update package database"
+#run sudo pacman -Syu
 
 # Additional hyprland essential packages (dev packages have to be already installed)
 # hyprland (tiling window manager)
 # kitty (default terminal for tiling window manager)
-# alacritty (additional terminal, installed as other apps in gnone or kde scripts)
-# waybar (Wayland bar for Sway and Wlroots based compositors)
-# wofi (GTK-based customizable launcher for Wayland)
-# ttf-font-awesome (Iconic font designed for Bootstrap)
-# ttf-cascadia-code-nerd (Patched font Cascadia Code (Caskaydia) from nerd fonts library)
-# stow (GNU Stow - Manage installation of multiple softwares in the same directory tree)
-# hyperpaper (Wallpaper utility for Hyprland)
-# starship (The cross-shell prompt for astronauts)
-# swaync (GTK based notification daemon for Sway)
+# hyprpaper (Wallpaper utility for Hyprland)
 # hyprlock (screen lock for Hyprland)
 # hypridle (hyprland’s idle daemon)
+# waybar (Wayland bar for Sway and Wlroots based compositors)
+# wofi (GTK-based customizable launcher for Wayland)
+# rofi-wayland (A window switcher, fork with wayland support)
+# alacritty (additional terminal, installed as other apps in gnome or kde scripts)
+# starship (The cross-shell prompt for astronauts), use powerlevel10k in zsh instead
+# swaync (GTK based notification daemon for Sway)
 # brightnessctl (Lightweight brightness control tool)
+# stow (GNU Stow - Manage installation of multiple softwares in the same directory tree)
+# ttf-font-awesome (Iconic font designed for Bootstrap)
+# ttf-cascadia-code-nerd (Patched font Cascadia Code (Caskaydia) from nerd fonts library)
+# papirus-icon-theme (Papirus icon theme for rofi application launcher)
 
-packages="hyprland kitty alacritty waybar wofi ttf-font-awesome ttf-cascadia-code-nerd stow hyperpaper starship swaync hyprlock hypridle brightnessctl"
+packages="hyprland kitty"
+packages="$packages hyprpaper hyprlock hypridle waybar rofi-wayland wofi"
+packages="$packages starship swaync brightnessctl stow"
+#packages="$packages ttf-font-awesome ttf-cascadia-code-nerd papirus-icon-theme"
+packages="$packages ttf-font-awesome ttf-cascadia-code-nerd"
 
 run sudo pacman -S --noconfirm --needed $packages
 
 # AUR hyprland essential packages
-# aur_packages=""
-# run yay -S $aur_packages
+aur_packages="papirus-icon-theme"
+run yay -S --noconfirm --needed $aur_packages
  
-# rm -r ~/.config/waybar
-
 run cp -r $script_dir/dotfiles ~/
 
+# stow configuration packages
+stow_packages="backgrounds hyprlock hyprmocha hyprpaper kitty rofi starship waybar wofi"
 
-# Enable configuration
+echo "enable hyprland configuration"
 ( 
   cd ~/dotfiles
-  run stow hyprlock
-  run stow hyprmocha
-  run stow hyperpaper
-  run stow kitty
-  run stow rofi
-  run stow starship
-  run stow waybar
-  run stow wofi
+  run stow $stow_packages
 )
 
 echo "copy hypridle.conf, hyprland.conf - as cannot stow them"
