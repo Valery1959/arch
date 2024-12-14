@@ -1,0 +1,21 @@
+set $wallpaper /home/valery/wallpaper/default.jpg
+
+set $background #191210
+set $foreground #e5c6a0
+
+set $color0 #191210
+set $color1 #9D3824
+set $color2 #B34F2D
+set $color3 #D16230
+set $color4 #B07748
+set $color5 #688469
+set $color6 #A79261
+set $color7 #e5c6a0
+set $color8 #a08a70
+set $color9 #9D3824
+set $color10 #B34F2D
+set $color11 #D16230
+set $color12 #B07748
+set $color13 #688469
+set $color14 #A79261
+set $color15 #e5c6a0

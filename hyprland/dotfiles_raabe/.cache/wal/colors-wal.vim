@@ -1,0 +1,23 @@
+" Special
+let wallpaper  = "/home/valery/wallpaper/default.jpg"
+let background = "#191210"
+let foreground = "#e5c6a0"
+let cursor     = "#e5c6a0"
+
+" Colors
+let color0  = "#191210"
+let color1  = "#9D3824"
+let color2  = "#B34F2D"
+let color3  = "#D16230"
+let color4  = "#B07748"
+let color5  = "#688469"
+let color6  = "#A79261"
+let color7  = "#e5c6a0"
+let color8  = "#a08a70"
+let color9  = "#9D3824"
+let color10 = "#B34F2D"
+let color11 = "#D16230"
+let color12 = "#B07748"
+let color13 = "#688469"
+let color14 = "#A79261"
+let color15 = "#e5c6a0"
