@@ -44,11 +44,29 @@ run sudo pacman -S --noconfirm --needed $packages
 # AUR hyprland essential packages
 aur_packages="papirus-icon-theme"
 run yay -S --noconfirm --needed $aur_packages
- 
+
+cur_date=$(date '+%Y.%m.%d_%H.%M.%S')
+
+if [ -d $HOME/dotfiles ] ; then # Backup existing dotfiles
+  [ ! -d $HOME/backups ] && run mkdir $HOME/backups
+  run mv $HOME/dotfiles $HOME/backups/dotfiles_$cur_date
+fi
+
 run cp -r $script_dir/dotfiles ~/
 
 # stow configuration packages
 stow_packages="backgrounds hyprlock hyprmocha hyprpaper kitty rofi starship waybar wofi"
+
+for p in $stow_packages
+do
+  n=$HOME/.config/$p
+
+  if [ -h $n ] ; then
+    run rm $n
+  elif [ -d $n ] ; then
+    run mv $p $HOME/backups/$p_$cur_date
+  fi
+done
 
 echo "enable hyprland configuration"
 ( 
