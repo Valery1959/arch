@@ -4,10 +4,7 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-run()
-{
-  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
-}
+source $script_dir/utils.sh
 
 which yay >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
 which git >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
@@ -53,7 +50,7 @@ if [ -d $HOME/dotfiles ] ; then # Backup existing dotfiles
   run mv $HOME/dotfiles $HOME/backups/dotfiles_$cur_date
 fi
 
-run cp -r $script_dir/dotfiles $HOME
+run cp -r $script_dir/extra/config/dotfiles $HOME
 
 # stow configuration packages
 stow_packages="backgrounds hyprlock hyprmocha hyprpaper kitty rofi starship waybar wofi"

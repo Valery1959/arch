@@ -4,12 +4,9 @@
 dir=$(cd $(dirname $0); pwd -P)
 bin=$dir/bin
 
-run()
-{
-  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
-}
+source $bin/utils.sh
 
-[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome"; exit -1; }
+[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome|hyprland"; exit -1; }
 
 for arg in $@
 do
@@ -18,6 +15,7 @@ do
     dev) dev=1 ;;
     kde) kde=1 ;;
     gnome) gnome=1 ;;
+    hyprland) hyprland=1; dev=1; gnome=1 ;;
     *) echo "Unknown arg: $arg"; exit -1 ;; 
   esac
 done
@@ -25,9 +23,12 @@ done
 [ ! -z $kde ] && [ ! -z $gnome ] && { echo "You should not install both gnome and kde"; exit -1; }
 
 [ ! -z $kvm ] && run $bin/kvm
-[ ! -z $dev ] && run $bin/dev
 [ ! -z $kde ] && { run $bin/kde plasma; run $bin/kde apps; }
 [ ! -z $gnome ] && { run $bin/gnome gnome; run $bin/gnome apps; }
+
+[ ! -z $dev ] && run $bin/dev
+
+[ ! -z $hyprland ] && run $bin/hyprland
 
 exit 0
 
