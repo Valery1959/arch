@@ -49,8 +49,11 @@ packages="fastfetch neofetch neovim git tmux htop btop zsh less reflector inetut
 # gdu (Disk usage analyzer (Go))
 # lazygit (GIT tool)
 # bottom (System monitor)
+# yazi (File manager)
+# eza (/bin/ls improvement)
+# zoxide (smarter cd command)
 
-packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom"
+packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom yazi eza zoxide"
 
 # Development
 # base-devel (Basic Build Tools)
@@ -66,6 +69,12 @@ packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu l
 # strace (Syscall tracer)
 
 packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind strace"
+
+# Terminals
+# alacritty (terminal)
+# kitty (terminal)
+
+packages="$packages alacritty kitty"
 
 run sudo pacman -S --noconfirm --needed $packages
 

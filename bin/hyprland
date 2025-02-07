@@ -73,7 +73,7 @@ echo "enable hyprland configuration"
 )
 
 echo "copy hypridle.conf, hyprland.conf - as cannot stow them"
-run rsync -lvrpt  $script_dir/dotfiles/hypr ~/.config 
+run rsync -lvrpt  $script_dir/extra/config/dotfiles/hypr ~/.config 
 
 # eval "$(starship init bash)"
 

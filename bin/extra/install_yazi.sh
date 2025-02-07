@@ -16,7 +16,7 @@ cfg="$HOME/.config"
 echo "Install Yazi plugins and flavors"
 run mkdir $cfg/yazi
 run ya pack -a yazi-rs/flavors:catppuccin-mocha
-run ya pack -a yazi-rs/plugins:smart-enter
+#run ya pack -a yazi-rs/plugins:smart-enter
 run rsync -lvrpt $script_dir/config/yazi/*.toml $cfg/yazi
 
 exit 0

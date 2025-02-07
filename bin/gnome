@@ -1,5 +1,7 @@
 #!/bin/bash
 
+script_dir=$(cd $(dirname $0); pwd -P)
+
 source $script_dir/utils.sh
 
 what="$1"; [ -z "$what" ] && { echo "Usage: $(basename $0) gnome|apps|<package>"; exit -1; }
