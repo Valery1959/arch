@@ -72,6 +72,11 @@ packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind stra
 
 run sudo pacman -S --noconfirm --needed $packages
 
+# Fonts for alacritty and kitty
+fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd ttf-meslo-nerd"
+
+run sudo pacman -S --noconfirm --needed $fonts
+
 which yay >/dev/null 2>&1
 if [ $? -ne 0 ] ; then
   run git clone https://aur.archlinux.org/yay.git
@@ -84,7 +89,21 @@ if [ $? -ne 0 ] ; then
   run yay visual-studio-code-bin --noconfirm --needed
 fi
 
-run $script_dir/dev_extra/install.sh
+# Configure and install some extra packages
+# configure zsh (install .zshrc, zsh-autosuggestions, zsh-syntax-highlighting, powerlevel10k prompt)
+# configure bash (add .functions.bash, update PATH in .bashrc and .zshrc with $HOME/.cargo/bin)
+# configure rust (default stable branch)
+# configure neovim (add astro configuration)
+run $script_dir/extra/install_zsh.sh
+run $script_dir/extra/install_bashrc.sh
+run $script_dir/extra/install_rust.sh
+run $script_dir/extra/install_astro.sh
+
+# Install some user scripts
+run mkdir -p $HOME/bin
+run cp $script_dir/extra/bin/* $HOME/bin
+
+#run $script_dir/extra/install.sh
 
 exit 0
 
