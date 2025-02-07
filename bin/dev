@@ -91,19 +91,16 @@ fi
 
 # Configure and install some extra packages
 # configure zsh (install .zshrc, zsh-autosuggestions, zsh-syntax-highlighting, powerlevel10k prompt)
-# configure bash (add .functions.bash, update PATH in .bashrc and .zshrc with $HOME/.cargo/bin)
+# configure zsh and bash (add .functions.bash, update PATH in .bashrc and .zshrc with $HOME/.cargo/bin)
 # configure rust (default stable branch)
 # configure neovim (add astro configuration)
 run $script_dir/extra/install_zsh.sh
-run $script_dir/extra/install_bashrc.sh
 run $script_dir/extra/install_rust.sh
 run $script_dir/extra/install_astro.sh
 
 # Install some user scripts
 run mkdir -p $HOME/bin
 run cp $script_dir/extra/bin/* $HOME/bin
-
-#run $script_dir/extra/install.sh
 
 exit 0
 

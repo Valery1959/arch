@@ -2,10 +2,7 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-run()
-{
-  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
-}
+source $script_dir/../utils.sh
 
 run rustup default stable
 

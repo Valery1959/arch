@@ -2,20 +2,7 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-run()
-{
-  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
-}
-
-update_file()
-{
-  file=$1
-  line=$2
-  cmnt=$3
-
-  echo "Updating $file with '$line'"
-  grep -qxF "$line" "$file" || echo -e "\n# $cmnt\n$line" >> "$file"
-}
+source $script_dir/../utils.sh
 
 if [ ! -f $HOME/.zshrc ] ; then
    echo "Installing .zshrc"
@@ -48,4 +35,12 @@ update_file $HOME/.zshrc 'source ~/.config/zsh/zsh-syntax-highlighting/zsh-synta
 echo "Installing powerlevel10k"
 run git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 update_file $HOME/.zshrc 'source ~/powerlevel10k/powerlevel10k.zsh-theme' 'support powerlevel10k theme'
+
+run cp $script_dir/config/.functions.bash $HOME
+
+update_file $HOME/.zshrc '[ -f ~/.functions.bash ] && source ~/.functions.bash' "support fuzzy finder and tmux"
+update_file $HOME/.zshrc 'export PATH=$HOME/bin:$HOME/.cargo/bin:$PATH' 'support home and cargo bin'
+
+update_file $HOME/.bashrc '[ -f ~/.functions.bash ] && source ~/.functions.bash' 'support fuzzy finder and tmux'
+update_file $HOME/.bashrc 'export PATH=$HOME/bin:$HOME/.cargo/bin:$PATH' 'support home and cargo bin'
 
