@@ -1,9 +1,6 @@
 #!/bin/bash
 
-run()
-{
-  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
-}
+source $script_dir/utils.sh
 
 what="$1"; [ -z "$what" ] && { echo "Usage: $(basename $0) plasma-desktop||plasma-meta|plasma|apps|<package>"; exit -1; }
 
