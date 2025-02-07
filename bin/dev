@@ -95,6 +95,9 @@ run $script_dir/extra/install_zsh.sh
 run $script_dir/extra/install_rust.sh
 run $script_dir/extra/install_astro.sh
 run $script_dir/extra/install_alacritty.sh
+run $script_dir/extra/install_zoxide.sh
+run $script_dir/extra/install_eza.sh
+run $script_dir/extra/install_yazi.sh
 
 # Install some user scripts
 run mkdir -p $HOME/bin
