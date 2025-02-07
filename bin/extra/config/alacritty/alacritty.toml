@@ -1,0 +1,42 @@
+[env]
+TERM = "xterm-256color"
+
+[window]
+decorations = "Full"        # Borders and title bar
+opacity = 1
+resize_increments = true    # Prefer resizing window by discrete steps equal to cell dimensions
+padding = { x = 5, y = 1 }  # Blank space added around the window in pixels (scaled by DPI)
+dynamic_padding = true      # Spread additional padding evenly around the terminal content
+dimensions = { columns = 140, lines = 35}
+
+[scrolling]
+history = 2000 # Maximum number of lines in the scrollback buffer.
+multiplier = 5 # Number of line scrolled for every input scroll increment
+
+[font]
+size = 13.2
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+
+# Increase font style
+# normal = { family = "JetBrainsMono Nerd Font", style = "Medium" }
+# bold = { style = "Bold" }
+# italic = { style = "Medium Italic" }
+# bold_italic = { style = "Bold Italic" }
+
+[keyboard]
+bindings = [ { key = "F11", action = "ToggleFullscreen" } ]
+
+[general]
+live_config_reload = true
+
+# import = [ "~/.config/alacritty/themes/themes/alabaster_dark.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/alacritty_0_12.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/ashes_dark.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/ayu_dark.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/breeze.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/catppuccin_mocha.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/catppuccin_macchiato.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/dark_pastels.toml" ]
+# import = [ "~/.config/alacritty/themes/themes/tokyo-night.toml" ]
+import = [ "~/.config/alacritty/themes/themes/breeze.toml" ]
+

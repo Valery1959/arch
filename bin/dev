@@ -94,6 +94,7 @@ fi
 run $script_dir/extra/install_zsh.sh
 run $script_dir/extra/install_rust.sh
 run $script_dir/extra/install_astro.sh
+run $script_dir/extra/install_alacritty.sh
 
 # Install some user scripts
 run mkdir -p $HOME/bin
