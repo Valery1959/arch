@@ -9,7 +9,7 @@ run()
 
 echo "Install AstroNvim settings"
 echo "    backup current nvim settings"
-run $script_dir/backup.sh
+run $script_dir/config/backup.sh
 
 localnvim="$HOME/.config/nvim"
 remotenvim="https://github.com/AstroNvim/template" 
@@ -20,7 +20,7 @@ git clone --depth 1 $remotenvim $localnvim
 run rm -rf $localnvim/.git
 
 echo "    copy user settings"
-run rsync -lrpt $script_dir/plugins $localnvim/lua
+run rsync -lrpt $script_dir/config/plugins $localnvim/lua
 
 file=$localnvim/lua/plugins/user_cpp.lua
 if [ -f $file ] ; then

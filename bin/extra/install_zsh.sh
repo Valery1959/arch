@@ -19,7 +19,7 @@ update_file()
 
 if [ ! -f $HOME/.zshrc ] ; then
    echo "Installing .zshrc"
-   run "cp $script_dir/.zshrc $HOME"
+   run "cp $script_dir/config/.zshrc $HOME"
 fi
 
 if [ ! -f $HOME/.config/zsh/zsh-autosuggestions ] ; then
