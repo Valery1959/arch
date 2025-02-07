@@ -1,0 +1,83 @@
+#!/bin/bash
+
+cfg="$HOME/.config/alacritty/alacritty.toml"
+dir="$HOME/.fonts"
+
+cc() { [ 1 -eq "$(echo "$1" | bc)" ] && return 0; return 1; }
+
+arg="$1"; [ -z "$arg" ] && arg=".*"; [[ $arg =~ ^\.[0-9]*$ ]] && arg="0$arg"
+
+if [[ $arg =~ ^[+-]?[0-9]+\.?[0-9]*$ ]] ; then
+  cc "$arg >  0 && $arg <=  1" && { s="opacity"; m="window opacity"; }
+  cc "$arg >= 5 && $arg <= 30" && { s="size";    m="font size";      }
+  [ -z $s ] && { echo "Argument should be in range <0;1] or [5;30]"; exit 1; }
+
+  echo "Changing $m to \"$arg\""; sed -i -e "s/^$s*.=.*/$s = $arg/g" $cfg
+elif [[ $arg == cc ]] ; then
+  str='import.*~/\.config/alacritty/themes/themes/'
+  theme_current=$(grep -E  "^\s*$str" $cfg | sed -e 's|^.*/||g' -e 's/".*$//g' | cut -d. -f1)
+  theme_array=( $(grep -E "^#\s*$str" $cfg | sed -e 's|^.*/||g' -e 's/".*$//g') )
+  for ind in ${!theme_array[@]}; do
+    t=$(echo ${theme_array[ind]} | cut -d. -f1)
+    ((i=ind+1))
+    printf "%s | %s\n" $i $t
+  done
+ 
+  typeset -i line=0
+  printf "%s\n" "-----------------------------"
+  printf "%s\n" "Current theme: $theme_current"
+  printf "%s"   "Choose  theme: "; read line
+  [ $line -le 0 ] || [ $line -gt ${#theme_array[@]} ] &&  { echo "$line does not exist"; exit 1; }
+  ((line--)); theme=${theme_array[line]}; [ -z "$theme" ] && { echo "Cannot get theme from line $line"; exit 1; }
+
+  t=$(echo ${theme} | cut -d. -f1); echo "Changing theme to $t"
+  sed -i -e 's|^'$str'.*|import = [ "~/.config/alacritty/themes/themes/'$theme'" ]|g' $cfg
+else
+  font_current=$(grep -E "^normal\s*.*family\s*.*" $cfg | awk -F"\"" '{ print $2 }')
+
+  font_list=$(fc-list | grep $dir | awk -F':' '{ print $2 }' | awk -F',' '{ print $1 }' | awk '{ printf "%s %s %s\n", $1, $2, $3}' |\
+              sort -u | grep -E -i "$arg" | tr '\n' ',')
+  OLD_IFS=$IFS; IFS=','; font_array=( $font_list ); IFS=$OLD_IFS
+
+  if [ -z "$font_array" ] ; then
+    [ -z $arg ] && { echo "No font installed in $dir"; exit 1; } || { echo "No font match pattern '$arg' in $dir"; exit 1; }
+  fi
+
+  if [ ${#font_array[@]} -ne 1 ] ; then
+    for ind in ${!font_array[@]}; do
+      ((i=ind+1))
+      printf "%s | %s\n" "$i" "${font_array[ind]}"
+    done
+
+    typeset -i line=0
+    printf "%s\n" "-----------------------------"
+    printf "%s\n" "Current font: $font_current"
+    printf "%s"   "Choose  font: "; read line
+    [ $line -le 0 ] || [ $line -gt ${#font_array[@]} ] &&  { echo "$line does not exist"; exit 1; }
+    ((line--)); font=${font_array[line]}; [ -z "$font" ] && { echo "Cannot get font from line $line"; exit 1; }
+  else
+    font=${font_array[0]};
+  fi
+
+  echo "Changing font to \"$font\""; sed  -i -e "s/^normal.*family.*,/normal = { family = \"$font\",/g" $cfg
+fi
+
+exit 0
+
+# arr=()        Create an empty array
+# arr=(1 2 3)   Initialize array
+# ${arr[2]}     Retrieve third element
+# ${arr[@]}     Retrieve all elements
+# ${!arr[@]}    Retrieve array indices
+# ${#arr[@]}    Calculate array size
+# arr[0]=3      Overwrite 1st element
+# arr+=(4)      Append value(s)
+# str=$(ls)     Save ls output as a string
+# arr=( $(ls) ) Save ls output as an array of files
+# ${arr[@]:s:n} Retrieve n elements starting at index s
+#
+# Looping through array
+# for ((i = 0; i < ${#font_array[@]}; i++)); do
+# for t in ${font_array[@]}; do
+# for i in ${!font_array[@]}; do
+
