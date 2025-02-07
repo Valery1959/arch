@@ -35,7 +35,8 @@ which git >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages";
 
 packages="hyprland kitty"
 packages="$packages hyprpaper hyprlock hypridle waybar rofi-wayland wofi"
-packages="$packages starship swaync brightnessctl stow"
+#packages="$packages starship swaync brightnessctl stow"
+packages="$packages swaync brightnessctl stow"
 #packages="$packages ttf-font-awesome ttf-cascadia-code-nerd papirus-icon-theme"
 packages="$packages ttf-font-awesome ttf-cascadia-code-nerd"
 
@@ -52,7 +53,7 @@ if [ -d $HOME/dotfiles ] ; then # Backup existing dotfiles
   run mv $HOME/dotfiles $HOME/backups/dotfiles_$cur_date
 fi
 
-run cp -r $script_dir/dotfiles ~/
+run cp -r $script_dir/dotfiles $HOME
 
 # stow configuration packages
 stow_packages="backgrounds hyprlock hyprmocha hyprpaper kitty rofi starship waybar wofi"

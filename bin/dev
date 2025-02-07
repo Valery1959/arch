@@ -69,7 +69,7 @@ packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind stra
 
 run sudo pacman -S --noconfirm --needed $packages
 
-# Fonts for alacritty and kitty
+# Terminal fonts
 fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd ttf-meslo-nerd"
 
 run sudo pacman -S --noconfirm --needed $fonts
@@ -91,6 +91,7 @@ fi
 # configure zsh and bash (add .functions.bash, update PATH in .bashrc and .zshrc with $HOME/.cargo/bin)
 # configure rust (default stable branch)
 # configure neovim (add astro configuration)
+# configure alacritty terminal, zoxide, eza and yazi
 run $script_dir/extra/install_zsh.sh
 run $script_dir/extra/install_rust.sh
 run $script_dir/extra/install_astro.sh
