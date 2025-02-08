@@ -16,8 +16,8 @@ check_install()
 
 check_install yay git kitty alacritty
 
-echo "Update package database"
-run sudo pacman -Syu
+#echo "Update package database"
+#run sudo pacman -Syu
 
 # Additional hyprland essential packages (dev packages have to be already installed)
 # hyprland (tiling window manager)
