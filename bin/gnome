@@ -11,9 +11,8 @@ system="gnome-terminal gnome-tweaks"
 utils=""
 multi=""
 graph=""
-other="alacritty"
 
-apps="$system $utils $multi $graph $games $other"
+apps="$system $utils $multi $graph $games"
 
 case $what in
   gnome) gdm=1; packages="gdm $what"  ;;

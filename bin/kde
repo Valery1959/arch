@@ -12,9 +12,8 @@ utils="konsole kate kcharselect kweather"
 multi="kdenlive"
 graph="gwenview okular"
 #games="kbreakout knights"
-other="alacritty"
 
-apps="$system $utils $multi $graph $games $other"
+apps="$system $utils $multi $graph $games"
 
 case $what in
   plasma-desktop|plasma-meta|plasma) sddm=1; packages="sddm $what"  ;;

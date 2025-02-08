@@ -71,8 +71,8 @@ packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu l
 packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind strace"
 
 # Terminals
-# alacritty (terminal)
-# kitty (terminal)
+# kitty (default teminal for tiling window manager)
+# alacritty (additional dev terminal)
 
 packages="$packages alacritty kitty"
 

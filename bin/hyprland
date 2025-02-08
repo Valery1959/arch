@@ -6,22 +6,29 @@ script_dir=$(cd $(dirname $0); pwd -P)
 
 source $script_dir/utils.sh
 
-which yay >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
-which git >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages"; exit 1; }
+check_install()
+{
+   for app in "$@"
+   do
+      which "$app" >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Missing $app, please install dev packages"; exit 1; }
+   done
+}
 
-#echo "Update package database"
-#run sudo pacman -Syu
+check_install yay git kitty alacritty
+
+echo "Update package database"
+run sudo pacman -Syu
 
 # Additional hyprland essential packages (dev packages have to be already installed)
 # hyprland (tiling window manager)
-# kitty (default terminal for tiling window manager)
+# kitty (default terminal for tiling window manager, should be already installed in dev)
+# alacritty (additional terminal, should be already installed in dev)
 # hyprpaper (Wallpaper utility for Hyprland)
 # hyprlock (screen lock for Hyprland)
 # hypridle (hyprland’s idle daemon)
 # waybar (Wayland bar for Sway and Wlroots based compositors)
 # wofi (GTK-based customizable launcher for Wayland)
 # rofi-wayland (A window switcher, fork with wayland support)
-# alacritty (additional terminal, installed as other apps in gnome or kde scripts)
 # starship (The cross-shell prompt for astronauts), use powerlevel10k in zsh instead
 # swaync (GTK based notification daemon for Sway)
 # brightnessctl (Lightweight brightness control tool)
@@ -30,7 +37,7 @@ which git >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Please install dev packages";
 # ttf-cascadia-code-nerd (Patched font Cascadia Code (Caskaydia) from nerd fonts library)
 # papirus-icon-theme (Papirus icon theme for rofi application launcher)
 
-packages="hyprland kitty"
+packages="hyprland"
 packages="$packages hyprpaper hyprlock hypridle waybar rofi-wayland wofi"
 #packages="$packages starship swaync brightnessctl stow"
 packages="$packages swaync brightnessctl stow"
