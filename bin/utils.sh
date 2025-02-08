@@ -14,3 +14,8 @@ update_file()
   echo "Updating $file with '$line'"
   grep -qxF "$line" "$file" || echo -e "\n# $cmnt\n$line" >> "$file"
 }
+
+installed()
+{
+  which "$1" >/dev/null 2>&1; return $?
+}

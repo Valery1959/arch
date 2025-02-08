@@ -10,7 +10,7 @@ check_install()
 {
    for app in "$@"
    do
-      which "$app" >/dev/null 2>&1; [ $? -ne 0 ] && { echo "Missing $app, please install dev packages"; exit 1; }
+      installed "$app" || { echo "Missing $app, please install dev packages"; exit 1; }
    done
 }
 

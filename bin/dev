@@ -83,16 +83,18 @@ fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd ttf-meslo-nerd"
 
 run sudo pacman -S --noconfirm --needed $fonts
 
-which yay >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
+if ! installed yay ; then
   run git clone https://aur.archlinux.org/yay.git
-  cd yay; makepkg -si --noconfirm --needed; cd
+  cd yay; makepkg -si --noconfirm --needed; cd ..
   run rm -rf yay
 fi
 
-which code >/dev/null 2>&1
-if [ $? -ne 0 ] ; then
-  run yay visual-studio-code-bin --noconfirm --needed
+if ! installed code ; then
+  run yay visual-studio-code-bin -S --noconfirm --needed
+fi
+
+if ! installed google-chrome-stable ; then
+  run yay google-chrome -S --noconfirm --needed
 fi
 
 # Configure and install some extra packages
