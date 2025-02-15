@@ -79,7 +79,8 @@ packages="$packages alacritty kitty"
 run sudo pacman -S --noconfirm --needed $packages
 
 # Terminal fonts
-fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd ttf-meslo-nerd"
+#fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd ttf-meslo-nerd"
+fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd"
 
 run sudo pacman -S --noconfirm --needed $fonts
 
