@@ -48,8 +48,8 @@ pass=$4
 # set up size of root partition
 typeset -i rsize=$5; [ $rsize -ne 0 ] && rs="+${rsize}G" || rs="-${rsize}"
 
-# set up optional extra partition with name passed
-extra=$6
+# set up optional extra partition with name passed, if size of root partition is passed
+extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, you should pass size of root parttion"; exit 1; }
 
 # set up boolean flag to create optional boot partion
 [ ! -z $7 ] && create_boot=1
