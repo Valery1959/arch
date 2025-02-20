@@ -28,7 +28,7 @@ fi
 
 [ ! -f $install_cmd ] && { echo "File $install_cmd does not exist"; exit -1; }
 
-$install_cmd $@ |& tee -a $install_log
+$install_cmd "$@" |& tee -a $install_log
 
 [ ! -f "$install_tag" ] && { echo "Cannot run $install_cmd $1 $2 $3"; exit -1; }
 [ ! -d "$install_usr" ] && { echo "Cannot create $install_usr"; exit -1; }
