@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -e
+
 run()
 {
   echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
@@ -27,9 +29,8 @@ installed()
 
 installed_grep()
 {
- a=1; return 1
   #pacman -Qq | grep -qw '^'$1'$'; return $?
-  #apt list | grep -qw '^'$1'$'; return $?
+  return 1
 }
 
 # man terminfo:
@@ -52,59 +53,78 @@ t_time()
   printf "%s %s %2s %s" $1 min $2 sec
 }
 
-progress()
+t_mesg()
+{
+  printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2)" 4) $3"
+}
+
+progress_bar()
 {
   local c1="● "; local c2="○●"; local c3="->"; local c4="<-"; local c5="|"
-  local m_tic=0; local m_min=0; local m_int=0; local m_sec=0
+  local clock=0; local m_min=0; local m_int=0; local m_sec=0
+
+  local m_inst=$(tmsg Installing 3)
+  local m_tic1=$(tmsg "$c1" 5)
+  local m_tic2=$(tmsg "$c2" 5)
+  local m_rarr=$(tmsg "$c3" 5)
+  local m_larr=$(tmsg "$c4" 5)
+  local m_vert=$(tmsg "$c5" 5)
+  local m_done=$(tmsg "done" 2)
 
   local pid=$1
-  local p=$2
+  local pkg=$2
 
   tput civis
+  while true
+  do
+    [ $clock -ge 60 ] && { clock=0; ((m_int++)); }
+    [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
+    if [ $clock -eq 0 ] ; then
+      ((m_sec = $m_int * 6))
+      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec "$m_tic1")"
+    elif [ $clock -lt 30 ] ; then 
+      printf "\b%s" "$m_tic2"
+    elif [ $clock -eq 30 ] ; then 
+      printf "%s\b" "$m_vert"
+    elif [ $clock -eq 31 ] ; then 
+      printf "%s\b" "$m_larr"
+    else
+      printf "\b\b\b%s" "$m_tic1"
+    fi
+    kill -s 0 $pid 2> /dev/null || break # check process by pid
+    sleep 0.1
+    ((clock++))
+  done
 
-    while true
-    do
-      [ $m_tic -ge 60 ] && { m_tic=0; ((m_int++)); }
-      [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
-      if [ $m_tic -eq 0 ] ; then
-        ((m_sec = $m_int * 6))
-        printf "\r%s %-25s %s\b" "$(tmsg Installing 3)" "$(tmsg $p 2)" "$(tmsg $c3 5) $(tmsg "$(t_time $m_min $m_sec)" 4) $(tmsg "$c1" 5)"
-      elif [ $m_tic -lt 30 ] ; then 
-        printf "\b%s" "$(tmsg $c2 5)"
-      elif [ $m_tic -eq 30 ] ; then 
-        printf "%s\b" "$(tmsg $c5 5)"
-      elif [ $m_tic -eq 31 ] ; then 
-        printf "%s\b" "$(tmsg $c4 5)"
-      else
-        printf "\b\b\b%s" "$(tmsg "$c1" 5)"
-      fi
-      ps -p $pid &> /dev/null || break
-      #[ $m_int -ge 1 ] && [ $m_tic = 40 ] && break
-      sleep 0.1
-      ((m_tic++))
-    done
-    ((m_sec = $m_int * 6 + $m_tic / 10))
-    printf "\r%s %-25s %-160s\n" "$(tmsg Installing 3)" "$(tmsg $p 2)" "$(tmsg $c3 5) $(tmsg "$(t_time $m_min $m_sec)" 4) $(tmsg $c4 5) $(tmsg "done" 2)"
+  wait $pid; exit_status=$?; [ $exit_status -eq 0 ] || m_done=$(tmsg "fail" 1)
+
+  ((m_sec = $m_int * 6 + $clock / 10))
+    
+  printf "\r%s %-25s %-160s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_larr) $m_done"
 
   tput cnorm
+
+  return $exit_status
 }
 
-install_pack()
-{
-  sudo apt install $p -y > /dev/null 2>&1
-  #sudo pacman -Sq --noconfirm --needed $p  > /dev/null 2>&1
-}
+LOG=$script_dir/log_file
 
-install()
+install_packages()
 {
-
+  sudo apt list &> /dev/null
+  #sudo pacman -Q $p &> /dev/null
   for p in $@
   do
-    apt show $p &> /dev/null  && { echo "$p is already installed"; continue; }
-    #pacman -Q $p &> /dev/null && { echo "$p is already installed"; continue; }
-    #echo "Install $p"
-    #sudo pacman -Sq --noconfirm --needed $p
-    install_pack $p &
-    progress $! $p
+    stdbuf -oL stdbuf -oL sudo apt install $p -y &>> $LOG & # line buffered output for tail -f $LOG
+   #stdbuf -oL stdbuf -oL sudo apt install $p -y &>> $LOG & # line buffered output for tail -f $LOG
+   #stdbuf -oL stdbuf -oL sudo pacman -Sq --noconfirm --needed $p &>> $LOG & # line buffered output for tail -f $LOG
+   #stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
+    progress_bar $! $p
+    if [ $? -ne 0 ] ; then
+      printf "%s" "Last command failed. Continue? (y|N) "; read answer
+      [[ ! $answer == [yY] ]] && { echo "Aborting execution, see $LOG file for details"; break; }
+      printf "\r%-160s" ""
+      tput cuu1
+    fi
   done
 }
