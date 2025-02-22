@@ -5,6 +5,8 @@ script_dir=$(cd $(dirname $0); pwd -P)
 
 source $script_dir/utils.sh; utils_init
 
+run setfont ter-v22b
+
 [ $(id -u) -eq 0 ] && err "This script must not be run under root user"
 source $script_dir/hyperland_args
 if [ "$1" = nvidia ]; then
