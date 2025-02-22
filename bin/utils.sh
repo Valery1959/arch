@@ -229,11 +229,11 @@ update_packages()
 {
   sudo ls &> /dev/null
   echo "Updating system packages"
-  if [ ! -z $u_cmd1 ] ; then
+  if [ ! -z "$u_cmd1" ] ; then
     $s_cmd $p_cmd $u_cmd1 &>> "$LOG" &
     progress_bar $! "all packages" "Upgrading "
     if [ $? -eq 0 ] ; then
-      if [ ! -z $u_cmd2 ] ; then
+      if [ ! -z "$u_cmd2" ] ; then
         $s_cmd $p_cmd $u_cmd2 &>> "$LOG"
         progress_bar $! "all packages" "Updating  "
         return $?
