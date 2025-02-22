@@ -51,7 +51,7 @@ utils_init()
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
-  pkg_path=$(which $p_cmd 2>/dev/null)
+  pkg_path=$(command -v $p_cmd 2>/dev/null)
 
   [ -z $pkg_path ] && { echo "Cannot locate package mgr: $pkg"; exit 1; }
 
@@ -94,13 +94,13 @@ check_rust()
 {
   check_init
 
-  [ -z "$(which rustup 2>/dev/null)" ] && { echo "Cannot find rustup, install rust"; exit 1; }
+  [ -z "$(command -v rustup 2>/dev/null)" ] && { echo "Cannot find rustup, install rust"; exit 1; }
 
   [ -z $@ ] && return 0
 
   for arg in $@
   do
-    app="$(which $arg 2>/dev/null)"
+    app="$(command -v $arg 2>/dev/null)"
     if [ ! -z "$app" ] && [ $(dirname $app) != $HOME/.cargo/bin ] ; then
       echo "$arg is already installed by non rust, please uninstall it manually"
       failed=1
