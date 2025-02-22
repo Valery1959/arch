@@ -1,6 +1,54 @@
 #!/bin/bash
 
-#set -e
+rel_file="/etc/os-release"
+
+getAttribute()
+{
+    cat $1 | grep -E "$2" | sed -e "s/$2//g" -e 's/"//g'
+}
+
+getProduct()
+{
+    echo "$1" | grep "$2" | awk '{ print $2 }';
+}
+
+utils_init()
+{
+  os_family=$(uname -a | awk '{ print $1 }')
+
+  case $os_family in
+    Darwin) svers=$(sw_vers);
+            os_name=$(getProduct "$svers" ProductName); version=$(getProduct "$svers" ProductVersion)    ;;
+    Linux)  os_name=$(getAttribute $rel_file "^NAME="); version=$(getAttribute $rel_file "^VERSION_ID=") ;;
+    *) echo "Unknown OS Family: $os_family"; exit 1 ;;
+  esac
+
+  case $os_name in
+    "Arch Linux") os_base="arch";   wx_dir="arch"   ;;
+    "Linux Mint") os_base="ubuntu"; wx_dir="mint"   ;;
+    "Ubuntu")     os_base="ubuntu"; wx_dir="ubuntu" ;;
+    "Fedora"*)    os_base="fedora"; wx_dir="fedora" ;;
+    "openSU"*)    os_base="opensu"; wx_dir="opensu" ;;
+    "macOS")      [[ "$version" ==  "13."* ]] && os_base="macos" ;;
+    *) echo "Unknown OS version: $os_name"; exit 1 ;;
+  esac
+
+  # sudo pacman -Sq --noconfirm --needed $p &>> $LOG & # line buffered output for tail -f $LOG
+  case $os_base in
+    macos)  s_cmd=""      p_cmd=brew;   i_cmd="install";    r_cmd="remove -y" ;;
+    ubuntu) s_cmd="sudo"; p_cmd=apt;    i_cmd="install -y"; r_cmd="remove -y" ;;
+    fedora) s_cmd="sudo"; p_cmd=dnf;    i_cmd="install -y"; r_cmd="remove -y" ;;
+    opensu) s_cmd="sudo"; p_cmd=zypper; i_cmd="--non-interactive in"; r_cmd="--non-interactive rm";;
+    arch)   s_cmd="sudo"  p_cmd=pacman; i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
+    *) echo "Unsupported version $version of $os_name"; exit 1 ;;
+  esac
+
+  pkg_path=$(which $p_cmd 2>/dev/null)
+
+  [ -z $pkg_path ] && { echo "Cannot locate package mgr: $pkg"; exit 1; }
+
+  [ ! -x $pkg_path ] && { echo "$pkg does not exist or executable"; exit 1; }
+}
 
 run()
 {
@@ -10,6 +58,64 @@ run()
 err()
 {
   echo "$@"; exit 1;
+}
+
+check_init()
+{
+  if [ -z "$s_cmd" ] || [ -z "$p_cmd" ] || [ -z "$i_cmd" ] || [ -z "$r_cmd" ] ; then
+    utils_init
+  fi
+}
+
+remove_pkg()
+{
+  check_init; run $s_cmd $p_cmd $r_cmd $@
+}
+
+install_pkg()
+{
+  check_init; run $s_cmd $p_cmd $i_cmd $@
+}
+
+remove_pkg()
+{
+  check_init; run $s_cmd $p_cmd $r_cmd $@
+}
+
+check_rust()
+{
+  check_init
+
+  [ -z "$(which rustup 2>/dev/null)" ] && { echo "Cannot find rustup, install rust"; exit 1; }
+
+  [ -z $@ ] && return 0
+
+  for arg in $@
+  do
+    app="$(which $arg 2>/dev/null)"
+    if [ ! -z "$app" ] && [ $(dirname $app) != $HOME/.cargo/bin ] ; then
+      echo "$arg is already installed by non rust, please uninstall it manually"
+      failed=1
+    fi
+  done
+
+  [ ! -z $failed ] && exit 1
+
+  return 0
+}
+
+ensure_rust()
+{
+  check_rust $@
+
+  echo "Ensure right Rust compiler installed"
+  run rustup override set stable
+  run rustup update stable
+}
+
+strip_rust()
+{
+   run strip $HOME/.cargo/bin/$1
 }
 
 update_file()
@@ -100,7 +206,7 @@ progress_bar()
 
   ((m_sec = $m_int * 6 + $clock / 10))
     
-  printf "\r%s %-25s %-160s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_larr) $m_done"
+  printf "\r%s %-25s %-92s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_larr) $m_done (new)"
 
   tput cnorm
 
@@ -109,22 +215,24 @@ progress_bar()
 
 LOG=$script_dir/log_file
 
+
 install_packages()
 {
-  sudo apt list &> /dev/null
+  sudo ls &> /dev/null
+  #sudo apt list &> /dev/null
   #sudo pacman -Q $p &> /dev/null
   for p in $@
   do
-    stdbuf -oL stdbuf -oL sudo apt install $p -y &>> $LOG & # line buffered output for tail -f $LOG
-   #stdbuf -oL stdbuf -oL sudo apt install $p -y &>> $LOG & # line buffered output for tail -f $LOG
-   #stdbuf -oL stdbuf -oL sudo pacman -Sq --noconfirm --needed $p &>> $LOG & # line buffered output for tail -f $LOG
-   #stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
+    stdbuf -oL $s_cmd $p_cmd $i_cmd $p &>> $LOG & # line buffered output for tail -f $LOG
+  # stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
     progress_bar $! $p
     if [ $? -ne 0 ] ; then
-      printf "%s" "Last command failed. Continue? (y|N) "; read answer
-      [[ ! $answer == [yY] ]] && { echo "Aborting execution, see $LOG file for details"; break; }
-      printf "\r%-160s" ""
-      tput cuu1
+      printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
+      if [[ $answer == [yY] ]] ; then
+        tput cuu1; printf "\r%-40s\r" ""
+      else
+        echo "Aborting, see $LOG file for details"; break;
+      fi
     fi
   done
 }
