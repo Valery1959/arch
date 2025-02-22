@@ -168,7 +168,7 @@ t_time()
 
 t_mesg()
 {
-  printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2 $3)" 12) $4"
+  printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2 $3)" 11) $4"
 }
 
 progress_bar()
