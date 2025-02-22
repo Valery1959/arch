@@ -3,7 +3,27 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-source $script_dir/utils.sh
+source $script_dir/utils.sh; utils_init
+
+[ $(id -u) -eq 0 ] && err "This script must not be run under root user"
+source $script_dir/hyperland_args
+if [ "$1" = nvidia ]; then
+   nvidia="Y"; nouveau="Y"
+fi
+
+update_packages; [ $? -ne 0 ] && { err "Cannot update packages, see $LOG"; exit 1; }
+
+# these packages should be manually uninstalled before run script
+#manually_uninstall="pulseaudio pulseaudio-qt"
+manually_uninstall="pulseaudio-n pulseaudio-qt-n"
+for p in $manually_uninstall
+do
+  check_pkg $p && err "$p is installed. Uninstall it before run"
+done
+
+install_packages "base-devel git"
+
+exit 0
 
 
 echo "Update package database"

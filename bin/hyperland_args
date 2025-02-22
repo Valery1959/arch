@@ -1,0 +1,28 @@
+
+nvidia="N"  # configure NVIDIA
+nouveau="N" # blacklist nouveau
+
+aur_helper="yay" # install yay (or paru)
+
+gtk_themes="Y" # Install GTK themes (required for Dark/Light function)
+bluetooth="Y" # Install bluetooth
+
+thunar="Y" # install Thunar file manager
+thunar_choice="Y" # set Thunar as the default
+
+
+input_group="Y" # Adding user to the 'input' group might be necessary for waybar keyboard-state functionality
+
+ags="Y" # Install AGS (aylur's GTK shell) v1 for Desktop-Like Overview?" 
+
+sddm="Y" # Install & configure SDDM log-in Manager
+sddm_theme="Y" # install and download SDDM themes
+
+xdph="Y" # Install XDG-DESKTOP-PORTAL-HYPRLAND? (For proper Screen Share ie OBS)
+
+zsh="Y" # Install zsh
+pokemon_choice="Y" # add Pokemon color scripts to terminal 
+
+rog="N" # This will install ASUSCTL & SUPERGFXCTL -Installing on Asus ROG Laptops
+
+dots="Y" # Download and Add pre-configured Hyprland dotfiles
