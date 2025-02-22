@@ -1,7 +1,7 @@
 #!/bin/bash
 # install hyprland
 
-script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; log_init $script_dir
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
 
 source $script_dir/hyperland_args
 if [ "$1" = nvidia ]; then
