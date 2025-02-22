@@ -4,9 +4,14 @@
 script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
 
 source $script_dir/hyperland_args
-if [ "$1" = nvidia ]; then
-   nvidia="Y"; nouveau="Y"
-fi
+for arg in $@
+do
+  case $arg in
+    nvidia) nvidia="Y"; nouveau="Y" ;;
+    "")                             ;;
+    *) err "Unknown argument $1"    ;;
+  esac
+done
 
 check_root
 check_sudo
