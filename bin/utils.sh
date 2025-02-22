@@ -33,13 +33,12 @@ utils_init()
     *) echo "Unknown OS version: $os_name"; exit 1 ;;
   esac
 
-  # sudo pacman -Sq --noconfirm --needed $p &>> $LOG & # line buffered output for tail -f $LOG
   case $os_base in
-    macos)  s_cmd=""      p_cmd=brew;   i_cmd="install";    r_cmd="remove -y" ;;
-    ubuntu) s_cmd="sudo"; p_cmd=apt;    i_cmd="install -y"; r_cmd="remove -y" ;;
-    fedora) s_cmd="sudo"; p_cmd=dnf;    i_cmd="install -y"; r_cmd="remove -y" ;;
-    opensu) s_cmd="sudo"; p_cmd=zypper; i_cmd="--non-interactive in"; r_cmd="--non-interactive rm";;
-    arch)   s_cmd="sudo"  p_cmd=pacman; i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
+    macos)  s_cmd=""      p_cmd=brew;   l_cmd="info";   i_cmd="install";    r_cmd="remove -y" ;;
+    ubuntu) s_cmd="sudo"; p_cmd=apt;    l_cmd="show";   i_cmd="install -y"; r_cmd="remove -y" ;;
+    fedora) s_cmd="sudo"; p_cmd=dnf;    l_cmd="info";   i_cmd="install -y"; r_cmd="remove -y" ;;
+    opensu) s_cmd="sudo"; p_cmd=zypper; l_cmd="info"; i_cmd="--non-interactive in"; r_cmd="--non-interactive rm";;
+    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";    i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
@@ -67,11 +66,6 @@ check_init()
   fi
 }
 
-remove_pkg()
-{
-  check_init; run $s_cmd $p_cmd $r_cmd $@
-}
-
 install_pkg()
 {
   check_init; run $s_cmd $p_cmd $i_cmd $@
@@ -80,6 +74,11 @@ install_pkg()
 remove_pkg()
 {
   check_init; run $s_cmd $p_cmd $r_cmd $@
+}
+
+check_pkg()
+{
+  $s_cmd $p_cmd $l_cmd $1 &> /dev/null; return $? # check packages one-by-one
 }
 
 check_rust()
@@ -133,10 +132,9 @@ installed()
   which "$1" >/dev/null 2>&1; return $?
 }
 
-installed_grep()
+package_installed()
 {
-  #pacman -Qq | grep -qw '^'$1'$'; return $?
-  return 1
+  $s_cmd $p_cmd $l_cmd $1 &> /dev/null; return $? 
 }
 
 # man terminfo:
@@ -156,29 +154,31 @@ tmsg()
 
 t_time()
 {
-  printf "%s %s %2s %s" $1 min $2 sec
+  printf "%s %s %2s %s" $1 min ${2}.${3} sec
 }
 
 t_mesg()
 {
-  printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2)" 4) $3"
+  printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2 $3)" 4) $4"
 }
 
 progress_bar()
 {
+  local pid=$1
+  local pkg=$2
+
   local c1="● "; local c2="○●"; local c3="->"; local c4="<-"; local c5="|"
   local clock=0; local m_min=0; local m_int=0; local m_sec=0
 
-  local m_inst=$(tmsg Installing 3)
+  local m_inst=$(tmsg "$3"  3)
   local m_tic1=$(tmsg "$c1" 5)
   local m_tic2=$(tmsg "$c2" 5)
   local m_rarr=$(tmsg "$c3" 5)
   local m_larr=$(tmsg "$c4" 5)
   local m_vert=$(tmsg "$c5" 5)
   local m_done=$(tmsg "done" 2)
-
-  local pid=$1
-  local pkg=$2
+  local m_note=$(tmsg "$4"  2)
+  local m_dsec=0
 
   tput civis
   while true
@@ -187,7 +187,7 @@ progress_bar()
     [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
     if [ $clock -eq 0 ] ; then
       ((m_sec = $m_int * 6))
-      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec "$m_tic1")"
+      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
     elif [ $clock -lt 30 ] ; then 
       printf "\b%s" "$m_tic2"
     elif [ $clock -eq 30 ] ; then 
@@ -205,8 +205,9 @@ progress_bar()
   wait $pid; exit_status=$?; [ $exit_status -eq 0 ] || m_done=$(tmsg "fail" 1)
 
   ((m_sec = $m_int * 6 + $clock / 10))
-    
-  printf "\r%s %-25s %-92s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_larr) $m_done (new)"
+  ((m_dsec = $clock % 10))
+
+  printf "\r%s %-25s %-104s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done ($m_note)"
 
   tput cnorm
 
@@ -215,7 +216,6 @@ progress_bar()
 
 LOG=$script_dir/log_file
 
-
 install_packages()
 {
   sudo ls &> /dev/null
@@ -223,9 +223,10 @@ install_packages()
   #sudo pacman -Q $p &> /dev/null
   for p in $@
   do
+    check_pkg $p; [ $? -ne 0 ] && m_note="new" || m_note="update"
     stdbuf -oL $s_cmd $p_cmd $i_cmd $p &>> $LOG & # line buffered output for tail -f $LOG
   # stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
-    progress_bar $! $p
+    progress_bar $! $p Installing $m_note
     if [ $? -ne 0 ] ; then
       printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
       if [[ $answer == [yY] ]] ; then
