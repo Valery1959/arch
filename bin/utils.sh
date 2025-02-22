@@ -34,11 +34,20 @@ utils_init()
   esac
 
   case $os_base in
-    macos)  s_cmd=""      p_cmd=brew;   l_cmd="info";   i_cmd="install";    r_cmd="remove -y" ;;
-    ubuntu) s_cmd="sudo"; p_cmd=apt;    l_cmd="show";   i_cmd="install -y"; r_cmd="remove -y" ;;
-    fedora) s_cmd="sudo"; p_cmd=dnf;    l_cmd="info";   i_cmd="install -y"; r_cmd="remove -y" ;;
-    opensu) s_cmd="sudo"; p_cmd=zypper; l_cmd="info"; i_cmd="--non-interactive in"; r_cmd="--non-interactive rm";;
-    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";    i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
+    macos)  s_cmd=""      p_cmd=brew;   l_cmd="info"; u_cmd1="";       u_cmd2=""        ;;
+    ubuntu) s_cmd="sudo"; p_cmd=apt;    l_cmd="show"; u_cmd1="update"; u_cmd2="upgrade" ;;
+    fedora) s_cmd="sudo"; p_cmd=dnf;    l_cmd="info"; u_cmd1="update"; u_cmd2=""        ;;
+    opensu) s_cmd="sudo"; p_cmd=zypper; l_cmd="info"; u_cmd1="ref";    u_cmd2="up"      ;;
+    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";  u_cmd1="-Syu";   u_cmd2=""        ;;
+    *) echo "Unsupported version $version of $os_name"; exit 1 ;;
+  esac
+
+  case $os_base in
+    macos)  i_cmd="install";                  r_cmd="remove -y" ;;
+    ubuntu) i_cmd="install -y";               r_cmd="remove -y" ;;
+    fedora) i_cmd="install -y";               r_cmd="remove -y" ;;
+    opensu) i_cmd="--non-interactive in";     r_cmd="--non-interactive rm";;
+    arch)   i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
@@ -164,20 +173,20 @@ t_mesg()
 
 progress_bar()
 {
-  local pid=$1
-  local pkg=$2
+  local pid="$1"
+  local pkg="$2"
 
   local c1="● "; local c2="○●"; local c3="->"; local c4="<-"; local c5="|"
   local clock=0; local m_min=0; local m_int=0; local m_sec=0
 
-  local m_inst=$(tmsg "$3"  3)
+  local m_inst="$(tmsg "$3"  3)"
   local m_tic1=$(tmsg "$c1" 5)
   local m_tic2=$(tmsg "$c2" 5)
   local m_rarr=$(tmsg "$c3" 5)
   local m_larr=$(tmsg "$c4" 5)
   local m_vert=$(tmsg "$c5" 5)
   local m_done=$(tmsg "done" 2)
-  local m_note=$(tmsg "$4"  2)
+  [ ! -z "$4" ] && local m_note=$(tmsg " ($4)" 2)
   local m_dsec=0
 
   tput civis
@@ -187,7 +196,7 @@ progress_bar()
     [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
     if [ $clock -eq 0 ] ; then
       ((m_sec = $m_int * 6))
-      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
+      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
     elif [ $clock -lt 30 ] ; then 
       printf "\b%s" "$m_tic2"
     elif [ $clock -eq 30 ] ; then 
@@ -207,7 +216,7 @@ progress_bar()
   ((m_sec = $m_int * 6 + $clock / 10))
   ((m_dsec = $clock % 10))
 
-  printf "\r%s %-25s %-104s\n" "$m_inst" "$(tmsg $pkg 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done ($m_note)"
+  printf "\r%s %-25s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
 
   tput cnorm
 
@@ -215,6 +224,26 @@ progress_bar()
 }
 
 LOG=$script_dir/log_file
+
+update_packages()
+{
+  sudo ls &> /dev/null
+  echo "Updating system packages"
+  if [ ! -z $u_cmd1 ] ; then
+    $s_cmd $p_cmd $u_cmd1 &>> "$LOG" &
+    progress_bar $! "all packages" "Upgrading "
+    if [ $? -eq 0 ] ; then
+      if [ ! -z $u_cmd2 ] ; then
+        $s_cmd $p_cmd $u_cmd2 &>> "$LOG"
+        progress_bar $! "all packages" "Updating  "
+        return $?
+      else
+        return 0
+      fi
+    fi
+  fi
+  return 1
+}
 
 install_packages()
 {
@@ -226,7 +255,7 @@ install_packages()
     check_pkg $p; [ $? -ne 0 ] && m_note="new" || m_note="update"
     stdbuf -oL $s_cmd $p_cmd $i_cmd $p &>> $LOG & # line buffered output for tail -f $LOG
   # stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
-    progress_bar $! $p Installing $m_note
+    progress_bar $! $p "Installing" "$m_note"
     if [ $? -ne 0 ] ; then
       printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
       if [[ $answer == [yY] ]] ; then
