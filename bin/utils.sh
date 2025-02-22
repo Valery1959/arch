@@ -38,7 +38,7 @@ utils_init()
     ubuntu) s_cmd="sudo"; p_cmd=apt;    l_cmd="show"; u_cmd1="update"; u_cmd2="upgrade" ;;
     fedora) s_cmd="sudo"; p_cmd=dnf;    l_cmd="info"; u_cmd1="update"; u_cmd2=""        ;;
     opensu) s_cmd="sudo"; p_cmd=zypper; l_cmd="info"; u_cmd1="ref";    u_cmd2="up"      ;;
-    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";  u_cmd1="-Syu";   u_cmd2=""        ;;
+    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";  u_cmd1="-Syu --noconfirm";   u_cmd2=""        ;;
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
