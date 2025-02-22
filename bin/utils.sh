@@ -68,6 +68,28 @@ err()
   echo "$@"; exit 1;
 }
 
+log_init()
+{
+  [ -d $1 ] || err "Script directory $1 does not exist ?"
+  LOG=$1/log_$(date +%Y.%m.%d_%H.%M.%S).log
+  # printf "%s\n" "Log file: $LOG"
+}
+
+check_root()
+{
+  [ $(id -u) -eq 0 ] && err "This script must not be run under root user"
+}
+
+check_nvidia()
+{
+  lspci | grep -i "nvidia" &> /dev/null; return $?
+}
+
+check_sudo()
+{
+  sudo echo -n &> /dev/null
+}
+
 check_init()
 {
   if [ -z "$s_cmd" ] || [ -z "$p_cmd" ] || [ -z "$i_cmd" ] || [ -z "$r_cmd" ] ; then
@@ -223,33 +245,30 @@ progress_bar()
   return $exit_status
 }
 
-LOG=$script_dir/log_file
 
-update_packages()
+upgrade_packages()
 {
-  sudo ls &> /dev/null
-  echo "Updating system packages"
+  check_sudo
+  exit_code=1
   if [ ! -z "$u_cmd1" ] ; then
     $s_cmd $p_cmd $u_cmd1 &>> "$LOG" &
     progress_bar $! "all packages" "Upgrading "
     if [ $? -eq 0 ] ; then
-      if [ ! -z "$u_cmd2" ] ; then
+      if [ -z "$u_cmd2" ] ; then
+        exit_code=0
+      else
         $s_cmd $p_cmd $u_cmd2 &>> "$LOG"
         progress_bar $! "all packages" "Updating  "
-        return $?
-      else
-        return 0
+        exit_code=$?
       fi
     fi
   fi
-  return 1
+  [ $exit_code -eq 0 ] || err "Cannot update packages, see $LOG"
 }
 
 install_packages()
 {
-  sudo ls &> /dev/null
-  #sudo apt list &> /dev/null
-  #sudo pacman -Q $p &> /dev/null
+  check_sudo
   for p in $@
   do
     check_pkg $p; [ $? -ne 0 ] && m_note="new" || m_note="update"
@@ -261,8 +280,18 @@ install_packages()
       if [[ $answer == [yY] ]] ; then
         tput cuu1; printf "\r%-40s\r" ""
       else
-        echo "Aborting, see $LOG file for details"; break;
+        echo "Aborting, see $LOG file for details"; exit 1
       fi
     fi
   done
+}
+
+notwant_packages()
+{
+  local pkgs=""
+  for p in $@
+  do
+    check_pkg $p && pkgs="$p $pkgs"
+  done
+  [[ -z $pkgs ]] || err "$(echo $pkgs | tr -s ' ') package(s) installed. Uninstall it before run."
 }

@@ -1,30 +1,26 @@
 #!/bin/bash
 # install hyprland
 
-script_dir=$(cd $(dirname $0); pwd -P)
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; log_init $script_dir
 
-source $script_dir/utils.sh; utils_init
-
-[ $(id -u) -eq 0 ] && err "This script must not be run under root user"
 source $script_dir/hyperland_args
 if [ "$1" = nvidia ]; then
    nvidia="Y"; nouveau="Y"
 fi
 
-update_packages; [ $? -ne 0 ] && { err "Cannot update packages, see $LOG"; exit 1; }
+check_root
+check_sudo
 
-# these packages should be manually uninstalled before run script
-#manually_uninstall="pulseaudio pulseaudio-qt"
-manually_uninstall="pulseaudio-n pulseaudio-qt-n"
-for p in $manually_uninstall
-do
-  check_pkg $p && err "$p is installed. Uninstall it before run"
-done
+notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
+upgrade_packages                                # upgrade and update all packages
+install_packages "base-devel git"               # 
+install_packages "pciutils"                     # to detect GPU
 
-install_packages "base-devel git"
+check_nvidia; [ $? -eq 0 ] || nvidia="N"
+
+echo "nvidia=$nvidia"
 
 exit 0
-
 
 echo "Update package database"
 
