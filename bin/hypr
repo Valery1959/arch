@@ -15,13 +15,13 @@ done
 
 check_root
 check_sudo
+check_sddm
 
 notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
 upgrade_packages                                # upgrade and update all packages
 install_packages "base-devel git"               # 
 install_packages "pciutils"                     # to detect GPU
-
-check_nvidia; [ $? -eq 0 ] || nvidia="N"
+grep_pci_devices "nvidia" || nvidia="N"         # detect nvidia
 
 echo "nvidia=$nvidia"
 
