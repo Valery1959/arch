@@ -229,7 +229,7 @@ progress_bar()
   local m_larr=$(tmsg "$c4" 5)
   local m_vert=$(tmsg "$c5" 5)
   local m_done=$(tmsg "done" 2)
-  [ ! -z "$4" ] && local m_note=$(tmsg " ($4)" 2)
+  [ ! -z "$4" ] && local m_note=$(tmsg " ($4)" 2) || local m_note=
   local m_dsec=0
 
   tput civis
