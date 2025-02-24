@@ -181,7 +181,7 @@ update_file()
 
 installed()
 {
-  which "$1" >/dev/null 2>&1; return $?
+  command "$1" &> /dev/null; return $?
 }
 
 package_installed()

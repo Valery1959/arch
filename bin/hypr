@@ -25,6 +25,23 @@ grep_pci_devices "nvidia" || nvidia="N"         # detect nvidia
 
 echo "nvidia=$nvidia"
 
+if [ $os_base = "arch" ] ; then
+  if ! installed yay; then
+
+    pkg=yay-bin
+
+    if [ -d "$pkg" ]; then
+      rm -rf "$pkg"
+    fi
+    git clone https://aur.archlinux.org/$pkg.git &>> $LOG &
+    progress_bar $! "$pkg" "Cloning  "
+    cd $pkg || err "Failed to cd $pkg"
+    makepkg -si --noconfirm --needed &>> $LOG &
+    progress_bar $! "yay" "Installing"
+    cd ..
+  fi
+fi
+
 exit 0
 
 echo "Update package database"
