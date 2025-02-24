@@ -80,9 +80,21 @@ check_root()
   [ $(id -u) -eq 0 ] && err "This script must not be run under root user"
 }
 
-check_nvidia()
+check_service()
 {
-  lspci | grep -i "nvidia" &> /dev/null; return $?
+  systemctl is-active --quiet $1; return $?
+}
+
+check_sddm()
+{
+   [[ $sddm != [yY] ]] && return
+
+   local services="gdm.service gdm3.service lightdm.service lxdm.service"
+   local service
+   for service in $services
+   do
+     check_service $service && err "$service is active. It should be inactive to install sddm service"
+   done
 }
 
 check_sudo()
@@ -295,3 +307,9 @@ notwant_packages()
   done
   [[ -z $pkgs ]] || err "$(echo $pkgs | tr -s ' ') package(s) installed. Uninstall it before run."
 }
+
+grep_pci_devices()
+{
+  lspci | grep -i "$1" &> /dev/null; return $?
+}
+
