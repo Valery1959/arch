@@ -19,7 +19,7 @@ check_sddm
 
 notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
 upgrade_packages                                # upgrade and update all packages
-install_packages "base-devel git"               # 
+install_packages "base-devel archlinux-keyring" # essential
 install_packages "pciutils"                     # to detect GPU
 grep_pci_devices "nvidia" || nvidia="N"         # detect nvidia
 

@@ -34,11 +34,11 @@ utils_init()
   esac
 
   case $os_base in
-    macos)  s_cmd=""      p_cmd=brew;   l_cmd="info"; u_cmd1="";       u_cmd2=""        ;;
-    ubuntu) s_cmd="sudo"; p_cmd=apt;    l_cmd="show"; u_cmd1="update"; u_cmd2="upgrade" ;;
-    fedora) s_cmd="sudo"; p_cmd=dnf;    l_cmd="info"; u_cmd1="update"; u_cmd2=""        ;;
-    opensu) s_cmd="sudo"; p_cmd=zypper; l_cmd="info"; u_cmd1="ref";    u_cmd2="up"      ;;
-    arch)   s_cmd="sudo"  p_cmd=pacman; l_cmd="-Qq";  u_cmd1="-Syu --noconfirm";   u_cmd2=""        ;;
+    macos)  s_cmd="";     p_cmd=brew;   u_cmd1="";                 u_cmd2=""        ;;
+    ubuntu) s_cmd="sudo"; p_cmd=apt;    u_cmd1="update";           u_cmd2="upgrade" ;;
+    fedora) s_cmd="sudo"; p_cmd=dnf;    u_cmd1="update";           u_cmd2=""        ;;
+    opensu) s_cmd="sudo"; p_cmd=zypper; u_cmd1="ref";              u_cmd2="up"      ;;
+    arch)   s_cmd="sudo"; p_cmd=pacman; u_cmd1="-Syu --noconfirm"; u_cmd2=""        ;;
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
@@ -48,6 +48,15 @@ utils_init()
     fedora) i_cmd="install -y";               r_cmd="remove -y" ;;
     opensu) i_cmd="--non-interactive in";     r_cmd="--non-interactive rm";;
     arch)   i_cmd="-Sq --noconfirm --needed"; r_cmd="Rq --noconfirm" ;;
+    *) echo "Unsupported version $version of $os_name"; exit 1 ;;
+  esac
+
+  case $os_base in
+    macos)  l_cmd="brew";     l_opt="info"             ;;
+    ubuntu) l_cmd="dpkg";     l_opt="-l"               ;;
+    fedora) l_cmd="dnf";      l_opt="info --installed" ;;
+    opensu) l_cmd="zypper";   l_opt="se -i"            ;;
+    arch)   l_cmd=pacman;     l_opt="-Qq"              ;;
     *) echo "Unsupported version $version of $os_name"; exit 1 ;;
   esac
 
@@ -121,7 +130,7 @@ remove_pkg()
 
 check_pkg()
 {
-  $s_cmd $p_cmd $l_cmd $1 &> /dev/null; return $? # check packages one-by-one
+  $s_cmd $l_cmd $l_opt $1 &> /dev/null; return $? # check packages one-by-one
 }
 
 check_rust()
@@ -230,7 +239,7 @@ progress_bar()
     [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
     if [ $clock -eq 0 ] ; then
       ((m_sec = $m_int * 6))
-      printf "\r%s %-25s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
+      printf "\r%s %-28s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
     elif [ $clock -lt 30 ] ; then 
       printf "\b%s" "$m_tic2"
     elif [ $clock -eq 30 ] ; then 
@@ -250,13 +259,12 @@ progress_bar()
   ((m_sec = $m_int * 6 + $clock / 10))
   ((m_dsec = $clock % 10))
 
-  printf "\r%s %-25s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
+  printf "\r%s %-28s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
 
   tput cnorm
 
   return $exit_status
 }
-
 
 upgrade_packages()
 {
