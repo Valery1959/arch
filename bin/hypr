@@ -36,8 +36,8 @@ if [ $os_base = "arch" ] ; then
     git clone https://aur.archlinux.org/$pkg.git &>> $LOG &
     progress_bar $! "$pkg" "Cloning   "
     cd $pkg || err "Failed to cd $pkg"
-    makepkg -si --noconfirm --needed &>> $LOG &
-    progress_bar $! "yay"  "Installing"
+    makepkg -si --noconfirm --needed 2>&1 | tee -a $LOG || err "Cannot make $pkg package"
+    #progress_bar $! "yay"  "Installing"
     cd ..
   fi
 fi
