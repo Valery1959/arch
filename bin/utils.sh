@@ -275,9 +275,7 @@ progress_bar()
 
   if [ ! -z "$m_skip" ] ; then
     tput cuu1
-    printf "\r%-104s\n" ""
-    tput cuu1
-    printf "\r%-104s\n" ""
+    printf "\r%-104s" ""
     tput cuu1
   fi
 
