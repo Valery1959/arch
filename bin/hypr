@@ -28,25 +28,6 @@ echo "nvidia=$nvidia"
 
 exit 0
 
-if [ $os_base = "arch" ] ; then
-  if ! installed yay; then
-
-    pkg=yay-bin
-
-    if [ -d "$pkg" ]; then
-      rm -rf "$pkg"
-    fi
-    git clone https://aur.archlinux.org/$pkg.git &>> $LOG &
-    progress_bar $! "$pkg" "Cloning   " "git clone"
-    cd $pkg || err "Failed to cd $pkg"
-    #makepkg -si --noconfirm --needed 2>&1 | tee -a $LOG || err "Cannot make $pkg package"
-    makepkg -si --noconfirm --needed &>> $LOG &
-    progress_bar $! "yay"  "Installing" "new" "please wait to enter password"
-    cd ..
-  fi
-fi
-
-
 echo "Update package database"
 
 run sudo pacman -Syu

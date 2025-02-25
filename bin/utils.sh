@@ -81,7 +81,11 @@ log_init()
 {
   [ -d $1 ] || err "Script directory $1 does not exist ?"
   LOG=$1/log_$(date +%Y.%m.%d_%H.%M.%S).log
-  # printf "%s\n" "Log file: $LOG"
+}
+
+exit_error()
+{
+  err "$@, see $LOG"
 }
 
 check_root()
@@ -303,7 +307,7 @@ upgrade_packages()
       fi
     fi
   fi
-  [ $exit_code -eq 0 ] || err "Cannot update packages, see $LOG"
+  [ $exit_code -eq 0 ] || exit_error "Cannot update packages"
 }
 
 install_packages()
@@ -320,7 +324,7 @@ install_packages()
       if [[ $answer == [yY] ]] ; then
         tput cuu1; printf "\r%-40s\r" ""
       else
-        echo "Aborting, see $LOG file for details"; exit 1
+        exit_error "Aborting"
       fi
     fi
   done
@@ -336,17 +340,23 @@ install_phelpers()
 
     git clone https://aur.archlinux.org/$yay.git "/tmp/$yay" &>> $LOG &
     progress_bar $! "$yay" "Cloning   " "clone"
-    [ $? -ne 0 ] && err "Cannot clone $yay"
+    [ $? -ne 0 ] && exit_error "Cannot clone $yay"
 
-    cd "/tmp/$yay" || err "Failed to change dir to /tmp/$yay"
+    cd "/tmp/$yay" || exit_error "Failed to change dir to /tmp/$yay"
 
     makepkg -si --noconfirm --needed &>> $LOG &
     progress_bar $! "yay"  "Installing" "new" "please wait to enter password"
-    [ $? -ne 0 ] && err "Cannot install $yay"
+    [ $? -ne 0 ] && exit_error "Cannot install $yay"
 
-    cd "$script_dir" || err "Failed to change dir to $script_dir"
+    cd "$script_dir" || exit_error "Failed to change dir to $script_dir"
 
-    rm -rf "/tmp/$yay" || err "Cannot remove /tmp/$yay"
+    rm -rf "/tmp/$yay" || exit_error "Cannot remove /tmp/$yay"
+
+    installed yay || exit_error "Cannot install yay"
+
+    yay -Syu --noconfirm &>> $LOG &
+    progress_bar $! "all packages"  "Upgrading " "yay"
+    [ $? -ne 0 ] && exit_error "Cannot install $yay"
   fi
 }
 
