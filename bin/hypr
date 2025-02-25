@@ -34,11 +34,11 @@ if [ $os_base = "arch" ] ; then
       rm -rf "$pkg"
     fi
     git clone https://aur.archlinux.org/$pkg.git &>> $LOG &
-    progress_bar $! "$pkg" "Cloning   "
+    progress_bar $! "$pkg" "Cloning   " "git clone"
     cd $pkg || err "Failed to cd $pkg"
     #makepkg -si --noconfirm --needed 2>&1 | tee -a $LOG || err "Cannot make $pkg package"
     makepkg -si --noconfirm --needed &>> $LOG &
-    progress_bar $! "yay"  "Installing" "new" "skip"
+    progress_bar $! "yay"  "Installing" "new" "please wait to enter password"
     cd ..
   fi
 fi

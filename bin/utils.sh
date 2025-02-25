@@ -214,7 +214,7 @@ t_mesg()
   printf "%s" "$m_rarr $(tmsg "$(t_time $1 $2 $3)" 6) $4"
 }
 
-t_wait()
+t_skip()
 {
   printf "%s" "$m_rarr $(tmsg "$1" 6)"
 }
@@ -237,12 +237,12 @@ progress_bar()
   local m_dsec=0
 
   local m_note=; [ ! -z "$4" ] && m_note=$(tmsg " ($4)" 2) 
-  local m_skip=; [ ! -z "$5" ] && m_skip=1
+  local m_skip=; [ ! -z "$5" ] && m_skip="$5"
 
   tput civis
 
   if [ ! -z "$m_skip" ] ; then
-    printf "\r%s %-28s %s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_wait "please wait for a moment")"
+    printf "\r%s %-28s %s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_skip "$m_skip")"
   fi
 
   while true
@@ -275,6 +275,7 @@ progress_bar()
 
   if [ ! -z "$m_skip" ] ; then
     tput cuu1
+    printf "\r%-104s\n" ""
     tput cuu1
   fi
 
