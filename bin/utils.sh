@@ -235,13 +235,16 @@ progress_bar()
   local m_skip=; [ ! -z "$5" ] && m_skip=1
 
   tput civis
+
+  if [ ! -z "$m_skip" ] ; then
+    printf "\r%s %-28s\n" "$m_inst" "$(tmsg "$pkg" 2)"
+  fi
+
   while true
   do
     [ $clock -ge 60 ] && { clock=0; ((m_int++)); }
     [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
-    if [ $m_skip ] ; then
-      printf "\r%s %-28s\n" "$m_inst" "$(tmsg "$pkg" 2)"
-    else
+    if [ -z "$m_skip" ] ; then
       if [ $clock -eq 0 ] ; then
         ((m_sec = $m_int * 6))
         printf "\r%s %-28s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
