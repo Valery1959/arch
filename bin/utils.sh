@@ -345,7 +345,7 @@ install_phelpers()
     cd "/tmp/$yay" || exit_error "Failed to change dir to /tmp/$yay"
 
     makepkg -si --noconfirm --needed &>> $LOG &
-    progress_bar $! "yay"  "Installing" "new" "please, wait "
+    progress_bar $! "yay"  "Installing" "new" "please, wait  "
     [ $? -ne 0 ] && exit_error "Cannot install $yay"
 
     cd "$script_dir" || exit_error "Failed to change dir to $script_dir"
