@@ -277,6 +277,8 @@ progress_bar()
     tput cuu1
     printf "\r%-104s\n" ""
     tput cuu1
+    printf "\r%-104s\n" ""
+    tput cuu1
   fi
 
   printf "\r%s %-28s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
