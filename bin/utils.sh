@@ -237,7 +237,7 @@ progress_bar()
   tput civis
 
   if [ ! -z "$m_skip" ] ; then
-    printf "\r%s %-28s\n" "$m_inst" "$(tmsg "$pkg" 2)"
+    printf "\r%s %-28s %s\n" "$m_inst" "$(tmsg "$pkg" 2)" "Please wait for a moment"
   fi
 
   while true
@@ -267,6 +267,10 @@ progress_bar()
 
   ((m_sec = $m_int * 6 + $clock / 10))
   ((m_dsec = $clock % 10))
+
+  if [ ! -z "$m_skip" ] ; then
+    tput cuu1
+  fi
 
   printf "\r%s %-28s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
 
