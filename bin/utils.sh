@@ -220,7 +220,7 @@ t_mesg()
 
 t_skip()
 {
-  printf "%s" "$m_rarr $(tmsg "$1" 6)"
+  printf "%s" "$m_rarr $(tmsg "$1" 6) $l_arr"
 }
 
 progress_bar()
@@ -345,7 +345,7 @@ install_phelpers()
     cd "/tmp/$yay" || exit_error "Failed to change dir to /tmp/$yay"
 
     makepkg -si --noconfirm --needed &>> $LOG &
-    progress_bar $! "yay"  "Installing" "new" "please wait to enter password"
+    progress_bar $! "yay"  "Installing" "new" "please wait a moment"
     [ $? -ne 0 ] && exit_error "Cannot install $yay"
 
     cd "$script_dir" || exit_error "Failed to change dir to $script_dir"
