@@ -206,7 +206,7 @@ tmsg()
 
 t_time()
 {
-  printf "%s %s %2s %s" $1 min ${2}.${3} sec
+  printf "%s %s %4s %s" $1 min ${2}.${3} sec
 }
 
 t_mesg()
@@ -279,7 +279,7 @@ progress_bar()
     tput cuu1
   fi
 
-  printf "\r%s %-28s %-104s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
+  printf "\r%s %-28s %-105s\n" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec $m_larr) $m_done$m_note"
 
   tput cnorm
 
@@ -324,6 +324,30 @@ install_packages()
       fi
     fi
   done
+}
+
+install_phelpers()
+{
+  if [ $os_base = "arch" ]; then
+
+    installed yay && return
+
+    local yay="yay-bin"; [ -d "/tmp/$yay" ] && rm -rf "/tmp/$yay"
+
+    git clone https://aur.archlinux.org/$yay.git "/tmp/$yay" &>> $LOG &
+    progress_bar $! "$yay" "Cloning   " "clone"
+    [ $? -ne 0 ] && err "Cannot clone $yay"
+
+    cd "/tmp/$yay" || err "Failed to change dir to /tmp/$yay"
+
+    makepkg -si --noconfirm --needed &>> $LOG &
+    progress_bar $! "yay"  "Installing" "new" "please wait to enter password"
+    [ $? -ne 0 ] && err "Cannot install $yay"
+
+    cd "$script_dir" || err "Failed to change dir to $script_dir"
+
+    rm -rf "/tmp/$yay" || err "Cannot remove /tmp/$yay"
+  fi
 }
 
 notwant_packages()

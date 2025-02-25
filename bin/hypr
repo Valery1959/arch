@@ -19,11 +19,14 @@ check_sddm
 
 notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
 upgrade_packages                                # upgrade and update all packages
+install_phelpers                                # package helpers, for example yay for ArchLinux
 install_packages "base-devel archlinux-keyring" # essential
 install_packages "pciutils"                     # to detect GPU
 grep_pci_devices "nvidia" || nvidia="N"         # detect nvidia
 
 echo "nvidia=$nvidia"
+
+exit 0
 
 if [ $os_base = "arch" ] ; then
   if ! installed yay; then
@@ -43,7 +46,6 @@ if [ $os_base = "arch" ] ; then
   fi
 fi
 
-exit 0
 
 echo "Update package database"
 
