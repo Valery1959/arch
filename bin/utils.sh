@@ -222,32 +222,38 @@ progress_bar()
   local c1="● "; local c2="○●"; local c3="->"; local c4="<-"; local c5="|"
   local clock=0; local m_min=0; local m_int=0; local m_sec=0
 
-  local m_inst="$(tmsg "$3"  3)"
+  local m_inst="$(tmsg "$3" 3)"
   local m_tic1=$(tmsg "$c1" 5)
   local m_tic2=$(tmsg "$c2" 5)
   local m_rarr=$(tmsg "$c3" 5)
   local m_larr=$(tmsg "$c4" 5)
   local m_vert=$(tmsg "$c5" 5)
   local m_done=$(tmsg "done" 2)
-  [ ! -z "$4" ] && local m_note=$(tmsg " ($4)" 2) || local m_note=
   local m_dsec=0
+
+  local m_note=; [ ! -z "$4" ] && m_note=$(tmsg " ($4)" 2) 
+  local m_skip=; [ ! -z "$5" ] && m_skip=1
 
   tput civis
   while true
   do
     [ $clock -ge 60 ] && { clock=0; ((m_int++)); }
     [ $m_int -ge 10 ] && { m_int=0; ((m_min++)); }
-    if [ $clock -eq 0 ] ; then
-      ((m_sec = $m_int * 6))
-      printf "\r%s %-28s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
-    elif [ $clock -lt 30 ] ; then 
-      printf "\b%s" "$m_tic2"
-    elif [ $clock -eq 30 ] ; then 
-      printf "%s\b" "$m_vert"
-    elif [ $clock -eq 31 ] ; then 
-      printf "%s\b" "$m_larr"
+    if [ $m_skip ] ; then
+      printf "\r%s %-28s\n" "$m_inst" "$(tmsg "$pkg" 2)"
     else
-      printf "\b\b\b%s" "$m_tic1"
+      if [ $clock -eq 0 ] ; then
+        ((m_sec = $m_int * 6))
+        printf "\r%s %-28s %s\b" "$m_inst" "$(tmsg "$pkg" 2)" "$(t_mesg $m_min $m_sec $m_dsec "$m_tic1")"
+      elif [ $clock -lt 30 ] ; then 
+        printf "\b%s" "$m_tic2"
+      elif [ $clock -eq 30 ] ; then 
+        printf "%s\b" "$m_vert"
+      elif [ $clock -eq 31 ] ; then 
+        printf "%s\b" "$m_larr"
+      else
+        printf "\b\b\b%s" "$m_tic1"
+      fi
     fi
     kill -s 0 $pid 2> /dev/null || break # check process by pid
     sleep 0.1
