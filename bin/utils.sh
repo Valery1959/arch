@@ -220,7 +220,7 @@ t_mesg()
 
 t_skip()
 {
-  printf "%s" "$m_rarr $(tmsg "$1" 6) $l_arr"
+  printf "%s" "$m_rarr $(tmsg "$1" 6) $m_larr"
 }
 
 progress_bar()
