@@ -296,13 +296,13 @@ upgrade_packages()
   exit_code=1
   if [ ! -z "$u_cmd1" ] ; then
     $s_cmd $p_cmd $u_cmd1 &>> "$LOG" &
-    progress_bar $! "all packages" "Upgrading "
+    progress_bar $! "all packages" "Upgrading " "$p_cmd"
     if [ $? -eq 0 ] ; then
       if [ -z "$u_cmd2" ] ; then
         exit_code=0
       else
         $s_cmd $p_cmd $u_cmd2 &>> "$LOG"
-        progress_bar $! "all packages" "Updating  "
+        progress_bar $! "all packages" "Updating  " "$p_cmd"
         exit_code=$?
       fi
     fi
