@@ -1,0 +1,15 @@
+#!/bin/bash
+# install hyprland
+
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+
+run sudo pacman -Syu
+run sudo pacman -S --noconfirm --needed git 
+run git clone --depth=1 https://github.com/JaKooLit/Arch-Hyprland.git ~/Arch-Hyprland
+
+cd ~/Arch-Hyprland; run chmod +x install.sh
+
+./install.sh
+
+exit 0
+
