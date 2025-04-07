@@ -14,20 +14,16 @@ install_log="$HOME/install.log"
 install_usr="/mnt/home/$3"
 install_tag="/mnt/root/arch.exit.0"
 
-#echo "Init pacman keys and append keys from archlinux.gpg"
-#run pacman-key --init
-#run pacman-key --populate archlinux
-#pacman -Sy --noconfirm --needed git glibc 2>&1 |& tee -a $install_log 
-#if [ $? -ne 0 ] ; then
-#  echo "Cannot install git libc"; exit -1
-#fi
+# pacman -Sy --noconfirm --needed git glibc 2>&1 |& tee -a $install_log
+# if [ $? -ne 0 ] ; then
+#   echo "Cannot install git libc"; exit -1
+# fi
+# git clone https://github.com/Valery1959/arch.git $install_dir > /dev/null 2>&1
 
 if [ ! -d $install_dir ] ; then
   mkdir $install_dir
-  curl https://codeload.github.com/Valery1959/arch/tar.gz/main | tar -xz --strip=1 -C $install_dir
-  #git clone https://github.com/Valery1959/arch.git $install_dir > /dev/null 2>&1 
+  curl https://codeload.github.com/Valery1959/arch/tar.gz/main | tar -xz --strip=1 -C $install_dir > /dev/null 2>&1
   if [ $? -ne 0 ] || [ ! -d $install_dir ] ; then
-    #echo "Cannot clone repository with arch installation scripts"; exit -1
     echo "Cannot download repository with arch installation scripts"; exit -1
   fi
 fi

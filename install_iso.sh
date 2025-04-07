@@ -184,6 +184,10 @@ if [ $extra ] ; then
   run mount -m $expar /mnt/$extra
 fi
 
+echo "Init pacman keys and pupulate them from archlinux"
+run pacman-key --init
+run pacman-key --populate archlinux
+
 echo "Install essential packages (minimal)"
 run pacstrap -K /mnt base linux linux-firmware sudo
 
