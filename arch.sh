@@ -14,6 +14,10 @@ install_log="$HOME/install.log"
 install_usr="/mnt/home/$3"
 install_tag="/mnt/root/arch.exit.0"
 
+echo "Init pacman keys and append keys from archlinux.gpg"
+run pacman-key --init
+run pacman-key --populate archlinux
+
 pacman -Sy --noconfirm --needed git glibc 2>&1 |& tee -a $install_log 
 if [ $? -ne 0 ] ; then
   echo "Cannot install git libc"; exit -1
