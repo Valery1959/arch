@@ -310,36 +310,36 @@ upgrade_packages()
   [ $exit_code -eq 0 ] || exit_error "Cannot update packages"
 }
 
+activate_service()
+{
+  stdbuf -oL systemctl --user enable --now $1 &>> $LOG & # line buffered output for tail -f $LOG
+  progress_bar $! "$2" "Activating" "systemctl"
+  if [ $? -ne 0 ] ; then
+    printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
+    if [[ $answer == [yY] ]] ; then
+      tput cuu1; printf "\r%-40s\r" ""
+    else
+      exit_error "Aborting"
+    fi
+  fi
+}
+
 install_packages()
 {
- # check_sudo
-  
-#  for p in $@
-#  do
-    [ ! -z "$2" ] && run_grp=$2 || run_grp=$1
-    [ ! -z "$3" ] && run_cmd=$3 || run_cmd="$s_cmd $p_cmd"
-    [ ! -z "$3" ] && run_msg=$3 || run_msg="$p_cmd"
+  [ ! -z "$2" ] && run_grp=$2 || run_grp=$1
+  [ ! -z "$3" ] && run_cmd=$3 || run_cmd="$s_cmd $p_cmd"
+  [ ! -z "$3" ] && run_msg=$3 || run_msg="$p_cmd"
 
-# echo "grp=$run_grp"
-# echo "cmd=$run_cmd"
-# echo $run_cmd $i_cmd $1
-
-#   return 
-  #  check_pkg $p; [ $? -ne 0 ] && m_note="new" || m_note="update"
-    stdbuf -oL $run_cmd $i_cmd $1 &>> $LOG & # line buffered output for tail -f $LOG
-  #  stdbuf -oL $s_cmd $p_cmd $i_cmd $p &>> $LOG & # line buffered output for tail -f $LOG
-  # stdbuf -oL $script_dir/install_pack $p &>> $LOG & # line buffered output for tail -f $LOG
-  #  progress_bar $! $p "Installing" "$m_note"
-    progress_bar $! "$run_grp" "Installing" "$run_msg"
-    if [ $? -ne 0 ] ; then
-      printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
-      if [[ $answer == [yY] ]] ; then
-        tput cuu1; printf "\r%-40s\r" ""
-      else
-        exit_error "Aborting"
-      fi
+  stdbuf -oL $run_cmd $i_cmd $1 &>> $LOG & # line buffered output for tail -f $LOG
+  progress_bar $! "$run_grp" "Installing" "$run_msg"
+  if [ $? -ne 0 ] ; then
+    printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
+    if [[ $answer == [yY] ]] ; then
+      tput cuu1; printf "\r%-40s\r" ""
+    else
+      exit_error "Aborting"
     fi
-#  done
+  fi
 }
 
 install_phelpers()

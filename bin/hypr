@@ -27,33 +27,46 @@ install_packages "pciutils"                     # to detect GPU
 grep_pci_devices "nvidia" || nvidia=N           # detect nvidia
 grep_linux_group "input"  && inputg=N           # check user already is in input group
 
-echo "nvidia=$nvidia"
-echo "inputg=$inputg"
-echo "sddm=$sddm"
-echo "sddm_theme=$sddm_theme"
-echo "gtk_themes=$gtk_themes"
-echo "bluetooth=$bluetooth"
-echo "thunar=$thunar"
-echo "ags=$ags"
-echo "xdph=$xdph"
-echo "pokemon=$pokemon"
-echo "rog=$rog"
-echo "dots=$dots"
+# echo "nvidia=$nvidia"
+# echo "inputg=$inputg"
+# echo "sddm=$sddm"
+# echo "sddm_theme=$sddm_theme"
+# echo "gtk_themes=$gtk_themes"
+# echo "bluetooth=$bluetooth"
+# echo "thunar=$thunar"
+# echo "ags=$ags"
+# echo "xdph=$xdph"
+# echo "pokemon=$pokemon"
+# echo "rog=$rog"
+# echo "dots=$dots"
 
-install_packages "findutils" # essential
+add_packages="$add_packages findutils bc cliphist curl grim gvfs gvfs-mtp hyprpolkitagent imagemagick inxi jq kitty kvantum"
+add_packages="$add_packages libspng network-manager-applet pamixer pavucontrol playerctl"
+add_packages="$add_packages python-requests python-pyquery qt5ct qt6ct qt6-svg rofi-wayland"
+add_packages="$add_packages slurp swappy swaync swww unzip waybar wget wl-clipboard"
+add_packages="$add_packages xdg-user-dirs xdg-utils yad"
+add_packages="$add_packages brightnessctl btop cava loupe fastfetch gnome-system-monitor"
+add_packages="$add_packages mousepad mpv mpv-mpris nvtop nwg-look nwg-displays"
+add_packages="$add_packages pacman-contrib qalculate-gtk yt-dlp"
 
-hypr_package="bc cliphist curl grim gvfs gvfs-mtp hyprpolkitagent imagemagick inxi jq kitty kvantum"
-hypr_package="$hypr_package libspng network-manager-applet pamixer pavucontrol playerctl"
-hypr_package="$hypr_package python-requests python-pyquery qt5ct qt6ct qt6-svg rofi-wayland"
-#hypr_package="$hypr_package slurp swappy swaync swww unzip wallust waybar wget wl-clipboard"
-hypr_package="$hypr_package slurp swappy swaync swww unzip waybar wget wl-clipboard"
-hypr_package="$hypr_package wlogout xdg-user-dirs xdg-utils yad"
-hypr_package="$hypr_package brightnessctl btop cava loupe fastfetch gnome-system-monitor"
-hypr_package="$hypr_package mousepad mpv mpv-mpris nvtop nwg-look nwg-displays"
-hypr_package="$hypr_package pacman-contrib qalculate-gtk yt-dlp"
+install_packages "$add_packages" "other packages"
+install_packages "wlogout"       "wlogout           " yay
+install_packages "wallust"       "wallust (long run)" yay
 
-install_packages "$hypr_package" "hypr_pack" yay
-install_packages "wallust" "wallust (long run)" yay
+pipewire="pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse sof-firmware"
+install_packages "$pipewire"     "pipewire"
+
+activate_service "pipewire.socket pipewire-pulse.socket" "pipewire sockets"
+activate_service "wireplumber.service" "wireplumber.service"
+activate_service "pipewire.service" "pipewire.service"
+
+fonts="$fonts adobe-source-code-pro-fonts noto-fonts-emoji otf-font-awesome ttf-droid ttf-fira-code"
+fonts="$fonts ttf-fantasque-nerd ttf-jetbrains-mono ttf-jetbrains-mono-nerd noto-fonts"
+
+install_packages "$fonts"     "fonts"
+install_packages "ttf-victor-mono"   "victor mono font" yay
+
+install_packages "hypridle hyprlock hyprland" "hypridle/lock/land"
 
 uninstall="aylurs-gtk-shell dunst cachyos-hyprland-settings mako rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
 
@@ -120,8 +133,8 @@ packages="$packages ttf-font-awesome ttf-cascadia-code-nerd"
 run sudo pacman -S --noconfirm --needed $packages
 
 # AUR hyprland essential packages
-aur_packages="papirus-icon-theme"
-run yay -S --noconfirm --needed $aur_packages
+add_packages="papirus-icon-theme"
+run yay -S --noconfirm --needed $add_packages
 
 cur_date=$(date '+%Y.%m.%d_%H.%M.%S')
 
