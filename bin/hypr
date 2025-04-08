@@ -7,9 +7,9 @@ source $script_dir/hyperland_args
 for arg in $@
 do
   case $arg in
-    nvidia) nvidia="Y"; nouveau="Y" ;;
-    "")                             ;;
-    *) err "Unknown argument $1"    ;;
+    nvidia) nvidia="Y"           ;;
+    "")                          ;;
+    *) err "Unknown argument $1" ;;
   esac
 done
 
@@ -19,15 +19,43 @@ check_sddm # check that non-SDDM login manager are inactive
 
 notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
 upgrade_packages                                # upgrade and update all packages
-install_packages "base-devel archlinux-keyring" # essential
+install_packages "archlinux-keyring"            # essential
+install_packages "base-devel"                   # essential
 install_packages "git"                          # to install package helpers, i.e. yay
 install_phelpers                                # package helpers, for example yay for ArchLinux
 install_packages "pciutils"                     # to detect GPU
 grep_pci_devices "nvidia" || nvidia=N           # detect nvidia
-grep_linux_group "input"  || inputg=N           # detect user is in input group
+grep_linux_group "input"  && inputg=N           # check user already is in input group
 
 echo "nvidia=$nvidia"
 echo "inputg=$inputg"
+echo "sddm=$sddm"
+echo "sddm_theme=$sddm_theme"
+echo "gtk_themes=$gtk_themes"
+echo "bluetooth=$bluetooth"
+echo "thunar=$thunar"
+echo "ags=$ags"
+echo "xdph=$xdph"
+echo "pokemon=$pokemon"
+echo "rog=$rog"
+echo "dots=$dots"
+
+install_packages "findutils" # essential
+
+hypr_package="bc cliphist curl grim gvfs gvfs-mtp hyprpolkitagent imagemagick inxi jq kitty kvantum"
+hypr_package="$hypr_package libspng network-manager-applet pamixer pavucontrol playerctl"
+hypr_package="$hypr_package python-requests python-pyquery qt5ct qt6ct qt6-svg rofi-wayland"
+#hypr_package="$hypr_package slurp swappy swaync swww unzip wallust waybar wget wl-clipboard"
+hypr_package="$hypr_package slurp swappy swaync swww unzip waybar wget wl-clipboard"
+hypr_package="$hypr_package wlogout xdg-user-dirs xdg-utils yad"
+hypr_package="$hypr_package brightnessctl btop cava loupe fastfetch gnome-system-monitor"
+hypr_package="$hypr_package mousepad mpv mpv-mpris nvtop nwg-look nwg-displays"
+hypr_package="$hypr_package pacman-contrib qalculate-gtk yt-dlp"
+
+install_packages "$hypr_package" "hypr_pack" yay
+install_packages "wallust" "wallust (long run)" yay
+
+uninstall="aylurs-gtk-shell dunst cachyos-hyprland-settings mako rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
 
 exit 0
 
