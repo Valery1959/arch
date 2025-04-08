@@ -1,8 +1,6 @@
 
-nvidia="N"  # configure NVIDIA
-nouveau="N" # blacklist nouveau
-
-aur_helper="yay" # install yay (or paru)
+nvidia=Y # configure NVIDIA, and if yes, then blacklist nouveau
+inputg=Y # Adding user to the 'input' group might be necessary for waybar keyboard-state functionality
 
 gtk_themes="Y" # Install GTK themes (required for Dark/Light function)
 bluetooth="Y" # Install bluetooth
@@ -11,7 +9,6 @@ thunar="Y" # install Thunar file manager
 thunar_choice="Y" # set Thunar as the default
 
 
-input_group="Y" # Adding user to the 'input' group might be necessary for waybar keyboard-state functionality
 
 ags="Y" # Install AGS (aylur's GTK shell) v1 for Desktop-Like Overview?" 
 

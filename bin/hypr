@@ -13,9 +13,9 @@ do
   esac
 done
 
-check_root
-check_sudo
-check_sddm
+check_root # this script should be run as root user
+check_sudo # enter password to run with sudo priviliges
+check_sddm # check that non-SDDM login manager are inactive
 
 notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
 upgrade_packages                                # upgrade and update all packages
@@ -23,9 +23,11 @@ install_packages "base-devel archlinux-keyring" # essential
 install_packages "git"                          # to install package helpers, i.e. yay
 install_phelpers                                # package helpers, for example yay for ArchLinux
 install_packages "pciutils"                     # to detect GPU
-grep_pci_devices "nvidia" || nvidia="N"         # detect nvidia
+grep_pci_devices "nvidia" || nvidia=N           # detect nvidia
+grep_linux_group "input"  || inputg=N           # detect user is in input group
 
 echo "nvidia=$nvidia"
+echo "inputg=$inputg"
 
 exit 0
 

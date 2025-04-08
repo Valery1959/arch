@@ -375,3 +375,8 @@ grep_pci_devices()
   lspci | grep -i "$1" &> /dev/null; return $?
 }
 
+grep_linux_group()
+{
+  [[ $(groups) =~ "$1" ]]; return $?
+}
+
