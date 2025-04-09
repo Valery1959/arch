@@ -134,7 +134,8 @@ remove_pkg()
 
 check_pkg()
 {
-  $s_cmd $l_cmd $l_opt $1 &> /dev/null; return $? # check packages one-by-one
+  [ $os_base != arch ] && { $s_cmd $l_cmd $l_opt $1 &> /dev/null; return $?; }
+  [[ "($s_cmd $l_cmd $l_opt $1 2> /dev/null)" == "$1" ]] && return 0; return 1 
 }
 
 check_rust()
@@ -314,6 +315,8 @@ activate_service()
 {
   stdbuf -oL systemctl --user enable --now $1 &>> $LOG & # line buffered output for tail -f $LOG
   progress_bar $! "$2" "Activating" "systemctl"
+  progress_bar $! "$2" "Enabling" "systemctl"
+  progress_bar $! "$2" "Disabling" "systemctl"
   if [ $? -ne 0 ] ; then
     printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
     if [[ $answer == [yY] ]] ; then

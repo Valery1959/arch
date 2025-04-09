@@ -3,6 +3,9 @@
 
 script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
 
+uninstall_packages="pulseaudio-u pulseaudio-qt-u aylurs-gtk-shell dunst cachyos-hyprland-settings mako"
+uninstall_packages="$uninstall_packages rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
+
 source $script_dir/hyperland_args
 for arg in $@
 do
@@ -17,15 +20,15 @@ check_root # this script should be run as root user
 check_sudo # enter password to run with sudo priviliges
 check_sddm # check that non-SDDM login manager are inactive
 
-notwant_packages "pulseaudio-u pulseaudio-qt-u" # these packages should be removed
-upgrade_packages                                # upgrade and update all packages
-install_packages "archlinux-keyring"            # essential
-install_packages "base-devel"                   # essential
-install_packages "git"                          # to install package helpers, i.e. yay
-install_phelpers                                # package helpers, for example yay for ArchLinux
-install_packages "pciutils"                     # to detect GPU
-grep_pci_devices "nvidia" || nvidia=N           # detect nvidia
-grep_linux_group "input"  && inputg=N           # check user already is in input group
+notwant_packages "$uninstall_packages" # these packages should be removed manually
+upgrade_packages                       # upgrade and update all packages
+install_packages "archlinux-keyring"   # essential
+install_packages "base-devel"          # essential
+install_packages "git"                 # to install package helpers, i.e. yay
+install_phelpers                       # package helpers, for example yay for ArchLinux
+install_packages "pciutils"            # to detect GPU
+grep_pci_devices "nvidia" || nvidia=N  # detect GPU, and if it is not nvidia, then do not install NVIDIA drivers
+grep_linux_group "input"  && inputg=N  # check user already is in input group
 
 # echo "nvidia=$nvidia"
 # echo "inputg=$inputg"
@@ -40,35 +43,43 @@ grep_linux_group "input"  && inputg=N           # check user already is in input
 # echo "rog=$rog"
 # echo "dots=$dots"
 
-add_packages="$add_packages findutils bc cliphist curl grim gvfs gvfs-mtp hyprpolkitagent imagemagick inxi jq kitty kvantum"
-add_packages="$add_packages libspng network-manager-applet pamixer pavucontrol playerctl"
-add_packages="$add_packages python-requests python-pyquery qt5ct qt6ct qt6-svg rofi-wayland"
-add_packages="$add_packages slurp swappy swaync swww unzip waybar wget wl-clipboard"
-add_packages="$add_packages xdg-user-dirs xdg-utils yad"
-add_packages="$add_packages brightnessctl btop cava loupe fastfetch gnome-system-monitor"
-add_packages="$add_packages mousepad mpv mpv-mpris nvtop nwg-look nwg-displays"
-add_packages="$add_packages pacman-contrib qalculate-gtk yt-dlp"
+# hyprland packages required
+hyprland_packages="$hyprland_packages findutils bc cliphist curl grim gvfs gvfs-mtp hyprpolkitagent imagemagick inxi jq kitty kvantum"
+hyprland_packages="$hyprland_packages libspng network-manager-applet pamixer pavucontrol playerctl"
+hyprland_packages="$hyprland_packages python-requests python-pyquery qt5ct qt6ct qt6-svg rofi-wayland"
+hyprland_packages="$hyprland_packages slurp swappy swaync swww unzip waybar wget wl-clipboard"
+hyprland_packages="$hyprland_packages xdg-user-dirs xdg-utils yad"
+hyprland_packages="$hyprland_packages brightnessctl btop cava loupe fastfetch gnome-system-monitor"
+hyprland_packages="$hyprland_packages mousepad mpv mpv-mpris nvtop nwg-look nwg-displays"
+hyprland_packages="$hyprland_packages pacman-contrib qalculate-gtk yt-dlp"
 
-install_packages "$add_packages" "other packages"
-install_packages "wlogout"       "wlogout           " yay
-install_packages "wallust"       "wallust (long run)" yay
+# hyprland packages required, only in AUR repository
+# wlogout (logout menu for wayland)
+# wallust (generate colors from an image)
+arch_usr_packages="wlogout wallust"
+hyprland_aurpacks="wlogout wallust"
 
-pipewire="pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse sof-firmware"
-install_packages "$pipewire"     "pipewire"
+# pipeware packages and services required
+pipewire_packages="pipewire wireplumber pipewire-audio pipewire-alsa pipewire-pulse sof-firmware"
+pipewire_services="pipewire.socket pipewire-pulse.socket wireplumber.service pipewire.service"
 
-activate_service "pipewire.socket pipewire-pulse.socket" "pipewire sockets"
-activate_service "wireplumber.service" "wireplumber.service"
-activate_service "pipewire.service" "pipewire.service"
+# hyprland fonts required
+hyprland_ttffonts="$hyprland_ttffonts adobe-source-code-pro-fonts noto-fonts-emoji otf-font-awesome ttf-droid ttf-fira-code"
+hyprland_ttffonts="$hyprland_ttffonts ttf-fantasque-nerd ttf-jetbrains-mono ttf-jetbrains-mono-nerd noto-fonts"
 
-fonts="$fonts adobe-source-code-pro-fonts noto-fonts-emoji otf-font-awesome ttf-droid ttf-fira-code"
-fonts="$fonts ttf-fantasque-nerd ttf-jetbrains-mono ttf-jetbrains-mono-nerd noto-fonts"
+# hyprland fonts required, only in AUR repository
+hyprland_aurfonts="ttf-victor-mono"
 
-install_packages "$fonts"     "fonts"
-install_packages "ttf-victor-mono"   "victor mono font" yay
+# hyprland main packages 
+hyprland_mainpack="hypridle hyprlock hyprland"
 
-install_packages "hypridle hyprlock hyprland" "hypridle/lock/land"
-
-uninstall="aylurs-gtk-shell dunst cachyos-hyprland-settings mako rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
+install_packages "$hyprland_packages" "hyprland packages"
+install_packages "$hyprland_aurpacks" "hyprland AUR pack"  yay
+install_packages "$pipewire_packages" "pipewire packages"
+activate_service "$pipewire_services" "pipewire services"
+install_packages "$hyprland_ttffonts" "hyprland ttf fonts"
+install_packages "$hyprland_aurfonts" "hyprland AUR fonts" yay
+install_packages "$hyprland_mainpack" "hypridle/lock/land"
 
 exit 0
 
@@ -133,8 +144,8 @@ packages="$packages ttf-font-awesome ttf-cascadia-code-nerd"
 run sudo pacman -S --noconfirm --needed $packages
 
 # AUR hyprland essential packages
-add_packages="papirus-icon-theme"
-run yay -S --noconfirm --needed $add_packages
+hyprland_packages="papirus-icon-theme"
+run yay -S --noconfirm --needed $hyprland_packages
 
 cur_date=$(date '+%Y.%m.%d_%H.%M.%S')
 
