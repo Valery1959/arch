@@ -138,6 +138,11 @@ check_pkg()
   [[ "($s_cmd $l_cmd $l_opt $1 2> /dev/null)" == "$1" ]] && return 0; return 1 
 }
 
+check_srv()
+{
+  systemctl is-active --quiet $1 &> /dev/null; return $? 
+}
+
 check_rust()
 {
   check_init
@@ -311,12 +316,11 @@ upgrade_packages()
   [ $exit_code -eq 0 ] || exit_error "Cannot update packages"
 }
 
-activate_service()
+enabling_service()
 {
-  stdbuf -oL systemctl --user enable --now $1 &>> $LOG & # line buffered output for tail -f $LOG
-  progress_bar $! "$2" "Activating" "systemctl"
-  progress_bar $! "$2" "Enabling" "systemctl"
-  progress_bar $! "$2" "Disabling" "systemctl"
+  echo "stdbuf -oL $2 systemctl $3 enable $4 $1"
+  stdbuf -oL $3 systemctl $4 enable $5 $1 &>> $LOG & # line buffered output for tail -f $LOG
+  progress_bar $! "$2" "Enabling  " "systemctl"
   if [ $? -ne 0 ] ; then
     printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
     if [[ $answer == [yY] ]] ; then
@@ -373,6 +377,16 @@ install_phelpers()
     progress_bar $! "all packages"  "Upgrading " "yay"
     [ $? -ne 0 ] && exit_error "Cannot install $yay"
   fi
+}
+
+notwant_services()
+{
+  local srvs=""
+  for p in $@
+  do
+    check_srv $p && srvs="$p $srvs"
+  done
+  [[ -z $srvs ]] || err "$(echo $srvs | tr -s ' ') service(s) are running. Disable it before run."
 }
 
 notwant_packages()

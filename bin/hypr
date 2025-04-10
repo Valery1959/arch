@@ -5,6 +5,8 @@ script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init;
 
 uninstall_packages="pulseaudio-u pulseaudio-qt-u aylurs-gtk-shell dunst cachyos-hyprland-settings mako"
 uninstall_packages="$uninstall_packages rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
+uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
+uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
 
 source $script_dir/hyperland_args
 for arg in $@
@@ -21,6 +23,7 @@ check_sudo # enter password to run with sudo priviliges
 check_sddm # check that non-SDDM login manager are inactive
 
 notwant_packages "$uninstall_packages" # these packages should be removed manually
+notwant_services "$uninstall_services"     # these services should be disabled manually
 upgrade_packages                       # upgrade and update all packages
 install_packages "archlinux-keyring"   # essential
 install_packages "base-devel"          # essential
@@ -73,13 +76,24 @@ hyprland_aurfonts="ttf-victor-mono"
 # hyprland main packages 
 hyprland_mainpack="hypridle hyprlock hyprland"
 
+# SDDM, SDDM theme and service
+sddm_login_themes="qt6-5compat qt6-declarative qt6-svg sddm"
+sddm_loginservice="sddm"
+
 install_packages "$hyprland_packages" "hyprland packages"
-install_packages "$hyprland_aurpacks" "hyprland AUR pack"  yay
+install_packages "$hyprland_aurpacks" "hyprland AUR pack"   yay
 install_packages "$pipewire_packages" "pipewire packages"
-activate_service "$pipewire_services" "pipewire services"
+enabling_service "$pipewire_services" "pipewire services"   ""    '--user'    '--now'
 install_packages "$hyprland_ttffonts" "hyprland ttf fonts"
-install_packages "$hyprland_aurfonts" "hyprland AUR fonts" yay
+install_packages "$hyprland_aurfonts" "hyprland AUR fonts"   yay
 install_packages "$hyprland_mainpack" "hypridle/lock/land"
+
+# At last, enable sddm if required
+[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
+# [ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
+
+# wayland_sessions_dir=/usr/share/wayland-sessions
+# [ ! -d "$wayland_sessions_dir" ] && run sudo mkdir "$wayland_sessions_dir" >> "$LOG"
 
 exit 0
 
