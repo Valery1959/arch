@@ -143,6 +143,11 @@ check_srv()
   systemctl is-active --quiet $1 &> /dev/null; return $? 
 }
 
+check_grp()
+{
+  grep -q '^'$1':' /etc/group; return $?
+}
+
 check_rust()
 {
   check_init
@@ -379,12 +384,22 @@ install_phelpers()
   fi
 }
 
+check_usr_groups()
+{
+  local grps=""
+  for g in $@
+  do
+    check_grp $g || grps="$g $grps"
+  done
+  [[ -z $grps ]] || err "the following mandatory group(s) do not exist: $(echo $grps | tr -s ' ')"
+}
+
 notwant_services()
 {
   local srvs=""
-  for p in $@
+  for s in $@
   do
-    check_srv $p && srvs="$p $srvs"
+    check_srv $s && srvs="$s $srvs"
   done
   [[ -z $srvs ]] || err "$(echo $srvs | tr -s ' ') service(s) are running. Disable it before run."
 }

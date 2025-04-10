@@ -7,6 +7,7 @@ uninstall_packages="pulseaudio-u pulseaudio-qt-u aylurs-gtk-shell dunst cachyos-
 uninstall_packages="$uninstall_packages rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
 uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
 uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
+mandatory_usr_grps="input $whoami"
 
 source $script_dir/hyperland_args
 for arg in $@
@@ -22,16 +23,17 @@ check_root # this script should be run as root user
 check_sudo # enter password to run with sudo priviliges
 check_sddm # check that non-SDDM login manager are inactive
 
+check_usr_groups "$mandatory_usr_grps" # check that groups exist
 notwant_packages "$uninstall_packages" # these packages should be removed manually
-notwant_services "$uninstall_services"     # these services should be disabled manually
+notwant_services "$uninstall_services" # these services should be disabled manually
 upgrade_packages                       # upgrade and update all packages
 install_packages "archlinux-keyring"   # essential
 install_packages "base-devel"          # essential
 install_packages "git"                 # to install package helpers, i.e. yay
 install_phelpers                       # package helpers, for example yay for ArchLinux
 install_packages "pciutils"            # to detect GPU
-grep_pci_devices "nvidia" || nvidia=N  # detect GPU, and if it is not nvidia, then do not install NVIDIA drivers
-grep_linux_group "input"  && inputg=N  # check user already is in input group
+grep_pci_devices "nvidia" || nvidia=   # detect GPU, and if it is not nvidia, then do not install NVIDIA drivers
+grep_linux_group "input"  && inputg=   # check user already is in input group
 
 # echo "nvidia=$nvidia"
 # echo "inputg=$inputg"
@@ -88,12 +90,13 @@ install_packages "$hyprland_ttffonts" "hyprland ttf fonts"
 install_packages "$hyprland_aurfonts" "hyprland AUR fonts"   yay
 install_packages "$hyprland_mainpack" "hypridle/lock/land"
 
-# At last, enable sddm if required
 [ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
 # [ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
 
-# wayland_sessions_dir=/usr/share/wayland-sessions
-# [ ! -d "$wayland_sessions_dir" ] && run sudo mkdir "$wayland_sessions_dir" >> "$LOG"
+wayland_sessions=/usr/share/wayland-sessions
+[ ! -d "$wayland_sessions" ] && run sudo mkdir "$wayland_sessions" | tea -a "$LOG"
+
+[ $inputg ] && run sudo usermod -aG input "$(whoami)" | tea -a $LOG
 
 exit 0
 
