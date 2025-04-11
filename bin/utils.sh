@@ -79,8 +79,9 @@ err()
 
 log_init()
 {
-  [ -d $1 ] || err "Script directory $1 does not exist ?"
-  LOG=$1/log_$(date +%Y.%m.%d_%H.%M.%S).log
+  [ -z $LOG ] || return 
+  [ -d $1   ] || err "Script directory $1 does not exist ?"
+  export LOG=$1/log_$(date +%Y.%m.%d_%H.%M.%S).log
 }
 
 exit_error()
@@ -323,7 +324,7 @@ upgrade_packages()
 
 enabling_service()
 {
-  echo "stdbuf -oL $2 systemctl $3 enable $4 $1"
+  # echo "stdbuf -oL $3 systemctl $4 enable $5 $1"
   stdbuf -oL $3 systemctl $4 enable $5 $1 &>> $LOG & # line buffered output for tail -f $LOG
   progress_bar $! "$2" "Enabling  " "systemctl"
   if [ $? -ne 0 ] ; then
@@ -422,5 +423,29 @@ grep_pci_devices()
 grep_linux_group()
 {
   [[ $(groups) =~ "$1" ]]; return $?
+}
+
+run_script()
+{
+  local prefix=$1; local message=$2; local script=$3; shift; shift; shift
+  local runmsg=""; [ ! -z "$1" ] && runmsg=" $@"
+  if [[ $prefix != [yY] ]] ; then
+  echo "Skipping '$script $@'" >> $LOG
+    stdbuf -oL echo "Skipping $script $@" &>> $LOG &
+    progress_bar $! "$message" "Skipping  " "$script$runmsg"
+    return
+  fi
+
+  echo "Running '$script $@'" >> $LOG
+  stdbuf -oL $script $@ &>> $LOG &
+  progress_bar $! "$message" "Running   " "$script$runmsg"
+  if [ $? -ne 0 ] ; then
+    printf "%s" "Last command failed. Continue? (y|N) "; read -e answer
+    if [[ $answer == [yY] ]] ; then
+      tput cuu1; printf "\r%-40s\r" ""
+    else
+      exit_error "Aborting"
+    fi
+  fi
 }
 

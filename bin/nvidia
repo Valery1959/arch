@@ -1,0 +1,10 @@
+#!/bin/bash
+# install hyprland
+
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+
+echo "Installing MVIDIA drivers ..."
+
+sleep 5
+
+exit 0

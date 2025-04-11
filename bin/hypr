@@ -9,6 +9,7 @@ uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
 uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
 mandatory_usr_grps="input $whoami"
 
+
 source $script_dir/hyperland_args
 for arg in $@
 do
@@ -18,6 +19,7 @@ do
     *) err "Unknown argument $1" ;;
   esac
 done
+
 
 check_root # this script should be run as root user
 check_sudo # enter password to run with sudo priviliges
@@ -90,13 +92,16 @@ install_packages "$hyprland_ttffonts" "hyprland ttf fonts"
 install_packages "$hyprland_aurfonts" "hyprland AUR fonts"   yay
 install_packages "$hyprland_mainpack" "hypridle/lock/land"
 
-[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
-# [ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
+install_packages "dolphin" "dolphin"
 
-wayland_sessions=/usr/share/wayland-sessions
-[ ! -d "$wayland_sessions" ] && run sudo mkdir "$wayland_sessions" | tea -a "$LOG"
+#[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
+#[ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
 
-[ $inputg ] && run sudo usermod -aG input "$(whoami)" | tea -a $LOG
+wayland_sessiondir=/usr/share/wayland-sessions; [ ! -d "$wayland_sessiondir" ] && waydir=Y
+
+run_script "$waydir" "create session dir" "sudo mkdir $wayland_sessiondir"
+run_script "$inputg" "input group"        "sudo usermod -aG input $(whoami)"
+run_script "$nvidia" "install nvidia"     "$script_dir/nvidia"
 
 exit 0
 
