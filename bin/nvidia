@@ -3,7 +3,7 @@
 
 script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
 
-echo "Installing MVIDIA drivers ..."
+echo "Installing NVIDIA drivers ..."
 
 sleep 5
 

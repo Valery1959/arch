@@ -92,7 +92,7 @@ install_packages "$hyprland_ttffonts" "hyprland ttf fonts"
 install_packages "$hyprland_aurfonts" "hyprland AUR fonts"   yay
 install_packages "$hyprland_mainpack" "hypridle/lock/land"
 
-install_packages "dolphin" "dolphin"
+#install_packages "dolphin" "dolphin"
 
 #[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
 #[ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
@@ -100,7 +100,7 @@ install_packages "dolphin" "dolphin"
 wayland_sessiondir=/usr/share/wayland-sessions; [ ! -d "$wayland_sessiondir" ] && waydir=Y
 
 run_script "$waydir" "create session dir" "sudo mkdir $wayland_sessiondir"
-run_script "$inputg" "input group"        "sudo usermod -aG input $(whoami)"
+run_script "$inputg" "add to input group" "sudo usermod -aG input $(whoami)"
 run_script "$nvidia" "install nvidia"     "$script_dir/nvidia"
 
 exit 0
