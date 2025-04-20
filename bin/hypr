@@ -94,14 +94,15 @@ install_packages "$hyprland_mainpack" "hypridle/lock/land"
 
 #install_packages "dolphin" "dolphin"
 
-#[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
-#[ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
+[ $sddm ] && install_packages "$sddm_login_themes" "sddm, sddm themes"
+[ $sddm ] && enabling_service "$sddm_loginservice" "sddm login service"   sudo
 
 wayland_sessiondir=/usr/share/wayland-sessions; [ ! -d "$wayland_sessiondir" ] && waydir=Y
 
 run_script "$waydir" "create session dir" "sudo mkdir $wayland_sessiondir"
 run_script "$inputg" "add to input group" "sudo usermod -aG input $(whoami)"
 run_script "$nvidia" "install nvidia"     "$script_dir/nvidia"
+run_script "$sddm"   "install sddm theme" "$script_dir/sddm_theme"
 
 exit 0
 

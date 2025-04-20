@@ -1,0 +1,12 @@
+#!/bin/bash
+# install hyprland
+
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+
+echo "Installing dot files ..."
+
+run git clone --depth=1 https://github.com/JaKooLit/Hyprland-Dots ~/Hyprland-Dots
+
+cd ~/Hyprland-Dots || exit 1
+
+exit 0

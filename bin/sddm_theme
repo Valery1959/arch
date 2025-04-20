@@ -1,0 +1,35 @@
+#!/bin/bash
+# install hyprland
+
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+
+echo "Installing sddm theme ..."
+
+theme_name=sddm_theme_hyprland
+
+theme_git="https://codeberg.org/JaKooLit/sddm-sequoia"
+theme_src=$HOME/$theme_name
+theme_usr=/usr/share/sddm/themes
+theme_dir=$theme_usr/$theme_name
+
+#[ -d $theme_src ] && run rm -r $theme_src
+#run git clone --depth=1 $theme_git $theme_src
+#run rm -rf $theme_src/.git
+
+[ ! -d $theme_usr ] && run sudo mkdir -p $theme_usr
+[   -d $theme_dir ] && run sudo rm -r $theme_dir
+
+run sudo cp -r $theme_src $theme_dir 
+
+cfg=/etc/sddm.conf.d
+
+[ -d $cfg ] && run sudo rm -r $cfg
+
+run sudo mkdir -p $cfg
+
+echo -e "Run 'echo -e [Theme]\\\nCurrent = $theme_name | sudo tee $cfg/theme.conf.user > /dev/null'"
+echo -e "[Theme]\nCurrent = $theme_name" | sudo tee $cfg/theme.conf.user > /dev/null
+
+[ ! -f $cfg/theme.conf.user ] && { echo "Failed to create $cfg/theme.conf.user"; exit 1; }
+
+exit 0
