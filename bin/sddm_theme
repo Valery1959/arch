@@ -5,21 +5,21 @@ script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init;
 
 echo "Installing sddm theme ..."
 
-theme_name=sddm_theme_hyprland
+theme_name=hyprland
 
-theme_git="https://codeberg.org/JaKooLit/sddm-sequoia"
-theme_src=$HOME/$theme_name
-theme_usr=/usr/share/sddm/themes
-theme_dir=$theme_usr/$theme_name
+sddm_git='git@github.com:Valery1959/sddm.git'
+sddm_src='sddm_project'
+sddm_usr='/usr/share/sddm/themes'
 
-#[ -d $theme_src ] && run rm -r $theme_src
-#run git clone --depth=1 $theme_git $theme_src
-#run rm -rf $theme_src/.git
+[ ! -d $sddm_usr ] && run sudo mkdir -p $sddm_usr
 
-[ ! -d $theme_usr ] && run sudo mkdir -p $theme_usr
-[   -d $theme_dir ] && run sudo rm -r $theme_dir
+run git clone $sddm_git /tmp/$sddm_src 
 
-run sudo cp -r $theme_src $theme_dir 
+[ -d $sddm_usr/$theme_name ] && run sudo rm -r $sddm_usr/$theme_name
+
+run sudo cp -r /tmp/$sddm_src/themes/$theme_name $sddm_usr 
+
+run rm -rf /tmp/$sddm_src
 
 cfg=/etc/sddm.conf.d
 
