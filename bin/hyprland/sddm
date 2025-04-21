@@ -1,13 +1,13 @@
 #!/bin/bash
 # install hyprland
 
-script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/../utils.sh; utils_init; log_init $script_dir
 
 echo "Installing sddm theme ..."
 
 theme_name=hyprland
 
-sddm_git='git@github.com:Valery1959/sddm.git'
+sddm_git='https://github.com/Valery1959/sddm.git'
 sddm_src='sddm_project'
 sddm_usr='/usr/share/sddm/themes'
 

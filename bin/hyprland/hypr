@@ -1,7 +1,7 @@
 #!/bin/bash
 # install hyprland
 
-script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/utils.sh; utils_init; log_init $script_dir
+script_dir=$(cd $(dirname $0); pwd -P); source $script_dir/../utils.sh; utils_init; log_init $script_dir
 
 uninstall_packages="pulseaudio-u pulseaudio-qt-u aylurs-gtk-shell dunst cachyos-hyprland-settings mako"
 uninstall_packages="$uninstall_packages rofi wallust-git rofi-lbonn-wayland rofi-lbonn-wayland-git"
@@ -10,7 +10,7 @@ uninstall_services="lightdm gdm3 gdm lxdm lxdm-gtk3"
 mandatory_usr_grps="input $whoami"
 
 
-source $script_dir/hyperland_args
+source $script_dir/preset
 for arg in $@
 do
   case $arg in
@@ -102,7 +102,7 @@ wayland_sessiondir=/usr/share/wayland-sessions; [ ! -d "$wayland_sessiondir" ] &
 run_script "$waydir" "create session dir" "sudo mkdir $wayland_sessiondir"
 run_script "$inputg" "add to input group" "sudo usermod -aG input $(whoami)"
 run_script "$nvidia" "install nvidia"     "$script_dir/nvidia"
-run_script "$sddm"   "install sddm theme" "$script_dir/sddm_theme"
+run_script "$sddm"   "install sddm theme" "$script_dir/sddm"
 
 exit 0
 
