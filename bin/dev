@@ -14,7 +14,6 @@ source $script_dir/utils.sh
 
 # Essential packages
 # fastfetch
-# neofetch
 # neovim (Text Editor)
 # git (Version Control)
 # tmux (Terminal Multiplexer)
@@ -32,7 +31,7 @@ source $script_dir/utils.sh
 # reflector (Arch mirror updater) 
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
 
-packages="fastfetch neofetch neovim git tmux htop btop zsh less reflector inetutils"
+packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
 
 # CLI tools
 # tree (Directory listing)
