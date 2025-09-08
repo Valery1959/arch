@@ -37,6 +37,7 @@ packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
 # tree (Directory listing)
 # fzf (Fuzzy finder)
 # jq (JSON processor)
+# bc (An arbitrary precision calculator language)
 # zip (ZIP archiver)
 # unzip (ZIP unarchiver)
 # whois (Whois client)
@@ -52,7 +53,7 @@ packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
 # eza (/bin/ls improvement)
 # zoxide (smarter cd command)
 
-packages="$packages tree fzf jq zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom yazi eza zoxide"
+packages="$packages tree fzf jq bc zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom yazi eza zoxide"
 
 # Development
 # base-devel (Basic Build Tools)
