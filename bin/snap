@@ -10,10 +10,9 @@
 # Post release step for btrfs - install snapper and other tools reqired to manage snapshots
 #
 
-run()
-{
-  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
-}
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
 
 restoreSEcon()
 {
@@ -59,6 +58,13 @@ echo "-----------------------------------------------"
 
 echo "--- Update system ..."
 run sudo pacman -Syu  
+
+if ! installed yay ; then
+  run git clone https://aur.archlinux.org/yay.git
+  cd yay; makepkg -si --noconfirm --needed; cd ..
+  run rm -rf yay
+fi
+
 run yay -Syu
 
 echo "--- Install the necessary packages ..."
@@ -99,6 +105,11 @@ echo "--- List shapshots:"
 run snapper ls                 # For root
 run snapper -c home ls         # For home
 
+#
+# The location of the directory containing the grub.cfg file should be /boot/grub
+# Otherwize, fix GRUB_BTRFS_GRUB_DIRNAME in /etc/default/grub-btrfs/config
+# Default is GRUB_BTRFS_GRUB_DIRNAME="/boot/grub"
+#
 echo "--- Enable grub-btrfsd service:"
 run sudo systemctl enable --now grub-btrfsd.service
 

@@ -152,11 +152,15 @@ run mkfs.btrfs $par2
 run mount $par2 /mnt
 run btrfs subvolume create /mnt/@
 run btrfs subvolume create /mnt/@home
+
+run btrfs subvolume create /mnt/@sddm
+
 run umount /mnt
 
 run mount -o compress=zstd,subvol=@ $par2 /mnt
 #run mkdir -p /mnt/home
 run mount -m -o compress=zstd,subvol=@home $par2 /mnt/home
+run mount -m -o subvol=@sddm $par2 /mnt/var/lib/sddm
 
 run mount -m $par1 /mnt/boot/efi
 
