@@ -163,7 +163,7 @@ if [ ! -z $p ] ; then # nvme device
    #mo="rw,noatime,compress-force=zstd:1,space_cache=v2"
    mo="compress=zstd:1"
 else
-   mo="compress=zstd:5"
+   mo="compress=zstd"
 fi
 
 run mount    -o ${mo},subvol=@        $par2 /mnt
