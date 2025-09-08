@@ -66,9 +66,15 @@ elif [ vendor = "AuthenticAMD" ] ; then
   microcode="amd-ucode"
 fi
 
+# networkmanager - to manage Internet connections (wired and wireless)
+# btrfs-progs    - btrfs file system management
+# grub           - bootloader
+# grub-btrfs     - adds btrfs support for the grub bootloader and enables the user to directly boot from snapshots
+# inotify-tools  - used by grub btrfsd deamon to automatically spot new snapshots and update grub entries
+# efibootmgr     - to install grub
+# openssh        - use ssh and manage keys
 echo "Install other essential packages"
-#run pacman -S --noconfirm --needed networkmanager grub efibootmgr dosfstools os-prober mtools openssh rsync vim $microcode
-run pacman -S --noconfirm --needed networkmanager grub efibootmgr openssh rsync vim $microcode
+run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs openssh rsync vim $microcode
 
 #echo "Create initial ramdisk environment"
 #run mkinitcpio -p linux
