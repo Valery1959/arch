@@ -1,0 +1,209 @@
+#!/bin/bash
+#
+# https://sysguides.com/install-fedora-42-with-snapshot-and-rollback-support
+#
+# To ensure important user data is preserved when rolling back
+# Snapper snapshots of the home subvolume, it's a good idea to
+# separate certain application directories into their own subvolumes.
+# This way, they remain unaffected by Snapper's undochange or rollback operations.
+#
+# Post release step for btrfs - install snapper and other tools reqired to manage snapshots
+#
+
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+restoreSEcon()
+{
+  echo "SELinux is not officially supported in Arch Linux yet"; return
+  run sudo restorecon $@
+}
+
+# -------------------------------------------------
+# 1. Prepare Home for Snapshots and Rollbacks 
+# -------------------------------------------------
+create_home_subvolume()
+{
+   sudo btrfs subvolume show ~/${1} 2>&1 > /dev/null && return # subvolume already exist
+
+   if [ -d ~/${1} ] ; then
+      run mv ~/${1} ~/${1}-old
+   fi
+   run btrfs subvolume create ~/${1}
+   if [ -d ~/${1}-old ] ; then
+      run cp -ar ~/${1}-old/. ~/${1}
+      run rm -rf ~/${1}-old
+   fi
+}
+
+echo "-----------------------------------------------"
+echo "Prepare Home for Snapshots and Rollbacks"
+echo "-----------------------------------------------"
+create_home_subvolume .mozilla
+create_home_subvolume .ssh
+create_home_subvolume .config/google-chrome
+
+restoreSEcon -RF $(ls -d ~/.* ~/*)
+
+run sudo btrfs subvolume list ~/ -o
+
+# -------------------------------------------------
+# 2. Set Up Snapper, grub-btrfs, and Btrfs Assistant 
+# -------------------------------------------------
+echo ""
+echo "-----------------------------------------------"
+echo "Set Up Snapper, grub-btrfs, and Btrfs Assistant"
+echo "-----------------------------------------------"
+
+echo "--- Update system ..."
+run sudo pacman -Syu  
+run yay -Syu
+
+echo "--- Install the necessary packages ..."
+run sudo pacman -S --needed --noconfirm grub-btrfs inotify-tools snapper snap-pac 
+run yay btrfs-assistant -S --noconfirm --needed
+
+# Create config commands below to do the following:
+# 1. Create config files at /etc/snapper/configs/root and home
+# 2. Add root and home to SNAPPER_CONFIGS in /etc/conf.d/snapper
+# 3. Create subvolumes .snapshots and @home/.snapshots
+echo "--- Create snapper configurations for the root (/) and home (/home) subvolumes"
+sudo snapper list-configs | grep -E "^root .*" > /dev/null 2>&1 || run sudo snapper -c root create-config /
+sudo snapper list-configs | grep -E "^home .*" > /dev/null 2>&1 || run sudo snapper -c home create-config /home
+
+echo "--- Verify snapper configurations"
+run sudo snapper list-configs
+
+echo "--- Restore the correct SELinux contexts for the .snapshots directories"
+restoreSEcon -RF /.snapshots
+restoreSEcon -RF /home/.snapshots
+
+echo "--- Verify SELinux labels"
+run ls -1dZ /.snapshots /home/.snapshots
+
+echo "--- Enable user access to Snapper and synchronize file ACLs"
+run sudo snapper -c root set-config ALLOW_USERS=$USER SYNC_ACL=yes
+run sudo snapper -c home set-config ALLOW_USERS=$USER SYNC_ACL=yes
+
+echo "--- Prevent updatedb from indexing the .snapshots directories"
+file=/etc/updatedb.conf
+line='PRUNENAMES = ".snapshots"'
+[ ! -f $file ] || grep -qxF "$line" "$file" || sudo sed -i -e '$a'"$line" $file
+
+echo "--- Verify subvolumes:"
+run sudo btrfs subvolume list /
+
+echo "--- List shapshots:"
+run snapper ls                 # For root
+run snapper -c home ls         # For home
+
+echo "--- Enable grub-btrfsd service:"
+run sudo systemctl enable --now grub-btrfsd.service
+
+# -------------------------------------------------
+# 3. Enable Automatic Timeline Snapshots
+# -------------------------------------------------
+echo ""
+echo "-----------------------------------------------"
+echo "Enable Automatic Timeline Snapshots"
+echo "-----------------------------------------------"
+
+# By default, timeline snapshots are enabled for both the root and home configurations.
+# However, it's recommended to keep it enabled only for the root and disable it for the home volume
+# to avoid excessive snapshot clutter.
+# These timers are configured to create a snapshot every hour and clean them up once a day. 
+# To customize the frequency, edit the timer files located in /usr/lib/systemd/system/ or
+# override them in /etc/systemd/system/. See the Snapper Arch Wiki for examples.
+
+run sudo snapper -c home set-config TIMELINE_CREATE=no
+run sudo systemctl enable --now snapper-timeline.timer
+run sudo systemctl enable --now snapper-cleanup.timer
+
+# -------------------------------------------------
+# 4. Snapper tests
+# -------------------------------------------------
+# Test 1: Undo the Changes Made by the DNF Installer
+# sudo dnf install ps_mem
+# sudo ps_mem
+# snapper ls
+# you can see, the ps_mem package has pre (#2) and post (#3) snapshots.
+# snapper status 2..3
+# sudo snapper undochange 2..3
+# sudo ps_mem # command not found
+# sudo snapper undochange 3..2
+# sudo ps_mem # should be successfull
+#
+# Test 2: Undo Any Changes Made to Individual Files
+# cat /etc/hosts
+# sudo sed -i '$d' /etc/hosts # remove last line
+# cat /etc/hosts
+# snapper diff 3..0 /etc/hosts # 0 - current shapshot, number 3 represents snapshot #3 from previous test
+# To replace the /etc/hosts file with the one in snapshot #3, use the following command:
+# sudo snapper undochange 3..0 /etc/hosts
+# cat /etc/hosts
+#
+# Test 3: Create Manual Pre-Post Snapshots and Undo the Changes
+# Create a manual 'pre' snapshot for both the / and /home directories.
+# snapper -c root create -t pre -c number -d 'Pre Color Picker'
+# snapper -c home create -t pre -c number -d 'Pre Color Picker'
+# snapper ls
+# snapper -c home ls
+# sudo dnf install meson gcc-c++ libhandy-devel libportal-devel libportal-gtk3-devel
+# git clone https://github.com/Hjdskes/gcolor3.git
+# cd gcolor3
+# meson setup build
+# ninja-build -C build
+# sudo ninja-build -C build install
+# gcolor3
+# snapper -c root create -t post --pre-number 4 -c number -d 'Post Color Picker'
+# snapper -c home create -t post --pre-number 1 -c number -d 'Post Color Picker'
+# snapper -c root status 4..7
+# snapper -c home status 1..2
+# snapper -c root status 4..7 | wc -l
+# snapper -c home status 1..2 | wc -l
+# undo the changes in the / and /home directories.
+# sudo snapper -c root undochange 4..7
+# sudo snapper -c home undochange 1..2
+# Log out and then log back in.
+# gcolor3 # command not found
+# Since you removed the Color Picker package,
+# there is no reason to keep its pre-post snapshots if you do not intend to use it again.
+# So you can delete those snapshots.
+# snapper -c root delete 4-7
+# snapper -c home delete 1-2
+#
+# Delete snapshots from test 1
+# sudo snapper undochange 2..3
+# snapper -c root delete 2-3
+
+# -------------------------------------------------
+# 8. Rollback Using Btrfs Assistant GUI
+# -------------------------------------------------
+
+# See the current list of available snapshots:
+# snapper ls
+#
+# Break the system
+# sudo rm -rvf /boot/{vmlinuz,initramfs}* /etc /usr
+# reboot
+#
+# The system won’t boot successfully and should throw a kernel-related error at startup.
+#
+# Return to GRUB menu, scroll down, and boot from snapshot #1
+# open a terminal and verify that the kernel and initramfs files are present at the snapshot:
+# sudo ls -1 /boot/{vmlinuz,initramfs}*
+
+# launch the Btrfs Assistant graphical application.
+# Click on the Snapper tab.
+# Switch to the Browse/Restore tab.
+# Ensure that Select target is set to the root subvolume.
+# Choose Snapshot #1.
+# Then click the Restore button.
+# reboot
+#
+# After rebooting, your root subvolume will be fully restored and back to a working state.
+#
+exit 0
+

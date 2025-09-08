@@ -6,7 +6,7 @@ bin=$dir/bin
 
 source $bin/utils.sh
 
-[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome|hyprland"; exit -1; }
+[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome|hyprland|snap"; exit -1; }
 
 for arg in $@
 do
@@ -16,6 +16,7 @@ do
     kde) kde=1 ;;
     gnome) gnome=1 ;;
     hyprland) hyprland=1; dev=1; gnome=1 ;;
+    snap) snap=1 ;;
     *) echo "Unknown arg: $arg"; exit -1 ;; 
   esac
 done
@@ -29,6 +30,8 @@ done
 [ ! -z $dev ] && run $bin/dev
 
 [ ! -z $hyprland ] && run $bin/hyprland
+
+[ ! -z $snap ] && run $bin/snap
 
 exit 0
 
