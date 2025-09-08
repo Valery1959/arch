@@ -25,7 +25,7 @@ restoreSEcon()
 # -------------------------------------------------
 create_home_subvolume()
 {
-   sudo btrfs subvolume show ~/${1} 2>&1 > /dev/null && return # subvolume already exist
+   sudo btrfs subvolume show ~/${1} > /dev/null 2>&1 && return # subvolume already exist
 
    if [ -d ~/${1} ] ; then
       run mv ~/${1} ~/${1}-old
@@ -60,6 +60,7 @@ echo "--- Update system ..."
 run sudo pacman -Syu  
 
 if ! installed yay ; then
+  run sudo pacman -S --needed --noconfirm git base-devel
   run git clone https://aur.archlinux.org/yay.git
   cd yay; makepkg -si --noconfirm --needed; cd ..
   run rm -rf yay
