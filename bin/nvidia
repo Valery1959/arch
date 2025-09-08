@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# https://sysguides.com/install-fedora-42-with-snapshot-and-rollback-support
+#
+# To ensure important user data is preserved when rolling back
+# Snapper snapshots of the home subvolume, it's a good idea to
+# separate certain application directories into their own subvolumes.
+# This way, they remain unaffected by Snapper's undochange or rollback operations.
+#
+# Post release step for btrfs - install snapper and other tools reqired to manage snapshots
+#
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
+
+# -------------------------------------------------
+# 1. Install NVIDIA drivers 
+# -------------------------------------------------
+echo ""
+echo "-----------------------------------------------"
+echo "Install NVIDIA drivers"
+echo "-----------------------------------------------"
+
+echo "--- Update system ..."
+run sudo pacman -Syu  
+
+# detect GPU, and if it is not nvidia, then do not install NVIDIA drivers
+grep_pci_devices "nvidia" || { echo "NVIDIA device not found, skipping NVIDIA drivers installation" ; exit 0; }
+
+echo "--- installing NVIDIA drivers ..."
+run sudo pacman -S --needed --noconfirm linux-headers nvidia-dkms nvidia-utils 
+
+exit 0
+

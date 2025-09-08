@@ -1,7 +1,11 @@
 #!/bin/bash
 
 cfg="$HOME/.config/alacritty/alacritty.toml"
+
 dir="$HOME/.fonts"
+if [ -d /usr/share/fonts/TTF ] ; then
+  dir="($dir|/usr/share/fonts/TTF)"
+fi
 
 cc() { [ 1 -eq "$(echo "$1" | bc)" ] && return 0; return 1; }
 
@@ -35,12 +39,12 @@ elif [[ $arg == cc ]] ; then
 else
   font_current=$(grep -E "^normal\s*.*family\s*.*" $cfg | awk -F"\"" '{ print $2 }')
 
-  font_list=$(fc-list | grep $dir | awk -F':' '{ print $2 }' | awk -F',' '{ print $1 }' | awk '{ printf "%s %s %s\n", $1, $2, $3}' |\
+  font_list=$(fc-list | grep -E $dir | grep -E -v "(Symbols|Awesome)" | awk -F':' '{ print $2 }' | awk -F',' '{ print $1 }' | awk '{ printf "%s %s %s\n", $1, $2, $3}' |\
               sort -u | grep -E -i "$arg" | tr '\n' ',')
   OLD_IFS=$IFS; IFS=','; font_array=( $font_list ); IFS=$OLD_IFS
 
   if [ -z "$font_array" ] ; then
-    [ -z $arg ] && { echo "No font installed in $dir"; exit 1; } || { echo "No font match pattern '$arg' in $dir"; exit 1; }
+    [ -z "$arg" ] && { echo "No font installed in $dir"; exit 1; } || { echo "No font match pattern '$arg' in $dir"; exit 1; }
   fi
 
   if [ ${#font_array[@]} -ne 1 ] ; then

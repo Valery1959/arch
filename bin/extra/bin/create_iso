@@ -1,0 +1,23 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+  #echo "Run '$@'"; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+src=$1
+dst=/dev/$2
+
+[ -z $src ] && { echo "Yoy should pass source file as a first argument"; exit 1; }
+[ -z $dst ] && { echo "Yoy should pass block device as second argument"; exit 1; }
+
+[ ! -f $src ] && { echo "File $src does not exist"; exit 1; }
+[ ! -b $dst ] && { echo "$dst is not block device"; exit 1; }
+
+# umount $dst
+
+run sudo dd if=$src of=$dst bs=8M status=progress oflag=direct
+
+exit 0
+

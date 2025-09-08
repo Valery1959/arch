@@ -1,0 +1,6 @@
+#!/bin/bash
+
+$HOME/.neko/launcher
+
+exit 0
+

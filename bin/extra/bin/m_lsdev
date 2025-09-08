@@ -1,0 +1,5 @@
+#!/bin/bash
+
+[ ! -z "$1" ] && args=",$(echo $* | tr -s ' ' ',')"
+
+lsblk -o "name,partlabel,label,size,fsused,UUID$args"

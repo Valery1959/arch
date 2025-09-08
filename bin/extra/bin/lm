@@ -1,0 +1,42 @@
+#!/bin/bash
+# need to point to one of installed clang directory
+
+get_ver()
+{
+  echo "/shared/llvm/llvm-project-$1/build/bin"
+}
+
+grp=$(get_ver "[1-2][0-9]\.[0-9]\.[0-9]")
+
+case "$1" in
+ 19) dir=$(get_ver 19.1.2) ;;
+ 20) dir=$(get_ver 20.0.0) ;;
+ "") dir="" ;;
+ *)  dir=$(get_ver $1) ;;
+esac
+
+if [ ! -z $dir ] && [ ! -d $dir ] ; then
+  echo "Directory $dir does not exist"
+else
+  while read line
+  do
+  if [[ ! $line =~ $grp ]] ; then 
+    if [[ -z "$new_path" ]] ; then
+      new_path="$line"
+    else
+      new_path="$new_path:$line"
+    fi
+  fi
+  done <<< $(echo "$PATH" | tr ':' '\n')
+fi
+
+if [ ! -z $new_path ] ; then
+  if [ -z $dir ] ; then 
+    export PATH="$new_path"
+  else
+    export PATH="$dir:$new_path"
+  fi
+fi
+
+echo "PATH=$PATH"
+

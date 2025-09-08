@@ -1,0 +1,23 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+vendor_id=$(cat /proc/cpuinfo | grep vendor_id | head -1 | awk '{ print $3 }')
+
+src_dir="/shared/scripts/kvm/macos"
+
+case $vendor_id in
+  GenuineIntel) src_kvm="kvm.conf"                ;;
+  AuthenticAMD) src_kvm="kvm_amd.conf"            ;;
+  *) echo "Unknown vendor ID: $vendor_id"; exit 1 ;;
+esac
+
+[ ! -f $src_dir/$src_kvm ] && { echo "$src_dir/$src_kvm does not exist"; exit 1; }
+
+run sudo cp $src_dir/$src_kvm /etc/modprobe.d/kvm.conf 
+
+exit 0
+

@@ -1,0 +1,27 @@
+#!/bin/bash
+# need to point to one of installed wxWidgets directory
+
+arg=$1; [ -z $arg ] && arg=1
+
+case $arg in
+ 1|d)   dir=wx_shared_d ;;
+ 2|r)   dir=wx_shared_r ;;
+ 3|sd*) dir=wx_static_d ;;
+ 4|sr*) dir=wx_static_r ;;
+ *) echo "Unknown option: $arg"; exit 1 ;;
+esac
+
+if [ $(hostname -s) = vio ] ; then
+  [ $script_dir/CMakeKits.json ] && { mv $script_dir/CMakeKits.json $script_dir/CMakeKits.linux.json; }
+  export wxWidgets_DIR="$HOME/$dir"
+else
+  [ -f $script_dir/CMakeKits.linux.json ] && { mv $script_dir/CMakeKits.linux.json $script_dir/CMakeKits.json; }
+  utils="/shared/scripts/utils.sh"; [ -f $utils ] || { echo "$utils does not exist"; exit 1; }
+  source $utils; utils_init
+  export wxWidgets_DIR="/shared/wxWidgets_$wx_dir/$dir"
+fi
+
+[ ! -d $wxWidgets_DIR ] && { echo "$wxWidgets_DIR does not exist"; exit 1; }
+
+echo "wxWidgets_DIR=$wxWidgets_DIR"
+

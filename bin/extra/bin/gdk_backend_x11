@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "export GDK_BACKEND=x11 # to support native, dockable floating frames"
+export GDK_BACKEND=x11

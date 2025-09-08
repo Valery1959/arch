@@ -1,0 +1,10 @@
+#!/bin/bash
+# start Visual Studio code for wxWidget based project
+# this has to be run once for each compiler to initial setup build/compile_commands.json
+
+source $(cd $(dirname $0); pwd -P)/get_wx_dir # need to point to installed wxWidgets directory
+
+code .
+
+exit 0
+

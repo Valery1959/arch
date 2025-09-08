@@ -1,0 +1,204 @@
+#!/bin/bash
+
+# https://bytefreaks.net/gnulinux/kvm-virtual-machines-backup-and-restoration
+
+SHUTOFF="shut off"
+RUNNING="running"
+
+virsh="sudo virsh"
+
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+has_state()
+{
+  dstate=$($virsh domstate $1 2>/dev/null)
+  [ -z "$dstate" ] && dstate="$SHUTOFF"
+  echo $dstate | paste -d " " - -  | grep "$2" > /dev/null
+}
+
+get_vm_list()
+{
+  read line; line=$(echo $line | sed -e 's/,/ /g')
+
+  vmlist=""; errnum=
+  for n in $line
+  do
+    t=${array[n]}; [ -z $t ] && { echo "$n does not exist" 1>&2; errnum=1; }
+    vmlist="$vmlist $t"
+  done
+  [ ! -z $errnum ] && vmlist=; echo $vmlist
+}
+
+run_virsh()
+{
+  a_vname="$1" # VM name
+  a_virsh="$2" # action to execute by virsh
+  a_check="$3" # VM state to check
+  a_print="$4" # VM state to print if VM check failed
+  
+  if has_state $a_vname "$a_check"; then
+    echo "$a_vname is already $a_check"
+    return
+  fi
+
+  run $virsh $a_virsh $a_vname | awk '!/^$/'
+
+  until has_state $a_vname "$a_check"; do
+    echo " $a_vname still $a_print"
+    sleep 1
+  done
+}
+
+run_backup()
+{
+  src_paths=$(virsh domblklist $1 | tail -n +3 | grep "/var/" | awk '{ print $2 }')
+
+  for p in $src_paths
+  do
+    [[ ! $p =~ $images_dir ]] && { echo "$p is not on $images_dir"; exit 1 ; }
+  done
+
+  backup_vm_dir=$backup_dir/$1; run mkdir -p $backup_vm_dir
+
+  echo "Run 'virsh dumpxml $1 > $backup_vm_dir/${1}.xml'"
+  virsh dumpxml $1 > $backup_vm_dir/${1}.xml
+
+  declare -A processed
+
+  for p in $src_paths
+  do
+    o=$(echo $p | sed -e "s|$images_dir/||g" | awk -F'/' '{ print $1 }'); [ -z $o ] && { echo "Cannot get $p"; exit 1; }
+    d=$images_dir/$o; [ ! -z ${processed[$d]} ] && continue; processed[$d]=1
+    if [ -d $d ] ; then
+      run mkdir -p $backup_vm_dir/$o
+      for c in $d/*
+      do
+        run sudo rsync -lrpt $c $backup_vm_dir/$o
+      done
+      run sudo rsync -lrpt $d $backup_vm_dir
+    else
+      run sudo rsync -lpt $d $backup_vm_dir
+    fi
+  done
+}
+
+run_restore()
+{
+  xml_file=$backup_dir/${1}/${1}.xml; [ ! -f $xml_file ] && { echo "No $xml_file found for $1"; exit 1; }
+
+  src_objs=$(ls $backup_dir/${1} 2>/dev/null); [ -z "$src_objs" ] && { echo "No backup files foundi for $1"; exit 1; }
+
+  run sudo virsh undefine --nvram --tpm $1 | awk '!/^$/'
+
+  for p in $src_objs
+  do
+    [[ "$backup_dir/${1}/$p" == "$xml_file" ]] && continue
+    run sudo rsync -lrpt "$backup_dir/${1}/$p" "$images_dir"
+    run sudo find "$images_dir/$p" -type d -exec chmod 0770 {} +
+    run sudo find "$images_dir/$p" -type f -exec chmod 0660 {} +
+  done
+
+  run virsh --connect qemu:///system define $xml_file | awk '!/^$/'
+  # run sudo virsh define --file $xml_file | awk '!/^$/'
+}
+
+start_stop()
+{
+  p_virsh="$1" # action to execute by virsh start or stop
+  p_check="$2" # VM state to check
+  p_egrep="$3" # VM state to egrep
+
+  array=( $($virsh list --all | tail -n +3 | grep "$p_egrep" | awk '!/^$/ { printf "%s ", $2 }') )
+
+  [ -z $array ] && { echo "No VM to $p_virsh"; exit 1; }
+
+  for ((i = 0; i < ${#array[@]}; i++)); do
+    printf "%s | %s | %s\n" "$i" "$p_egrep" "${array[i]}"
+  done
+
+  printf "choose number(s) to $p_virsh: "
+
+  vm_list=$(get_vm_list)
+  
+  for vm in $vm_list
+  do
+    run_virsh $vm "$p_virsh" "$p_check" "$p_egrep"
+  done
+}
+
+backup_restore()
+{
+  case $1 in 
+    backup)
+      vm_all=$(virsh list --all | tail -n +3 | awk '!/^$/')
+      array=( $(echo "$vm_all" | awk '{ printf "%s ", $2 }') ); [ -z $array ] && { echo "No VM to $1"; exit 1; }
+      echo "$vm_all" | awk '{printf "%s | %s %s | %s\n", NR-1, $3, $4, $2}'
+      ;;
+    restore)
+      vm_all=$(find $backup_dir -mindepth 1 -maxdepth 1 | xargs basename -a 2>/dev/null | sed 's/\.[^.]*$//' | sort -u);
+      array=( $vm_all ); [ -z $array ] && { echo "No VM to $1"; exit 1; }
+      echo "$vm_all" | awk '{printf "%s | %s\n", NR-1, $1}'
+      ;;
+    *) return ;;
+  esac
+
+  printf "choose number(s) to $1: "
+
+  vm_list=$(get_vm_list)
+
+  for vm in $vm_list
+  do
+    if has_state $vm "$RUNNING"; then
+      run_virsh $vm shutdown "$SHUTOFF" "$RUNNING"
+    fi
+  done
+
+  for vm in $vm_list
+  do
+    if has_state $vm "$SHUTOFF"; then
+      case $1 in 
+        backup)  run_backup  $vm ;;
+        restore) run_restore $vm ;;
+      esac
+    else
+      echo "VM $vm is $RUNNING, skipping $1"
+    fi
+  done
+}
+
+case $1 in
+  start)   s_cmd=start;    do_check="$RUNNING"; do_egrep="$SHUTOFF" ;;
+  stop)    s_cmd=shutdown; do_check="$SHUTOFF"; do_egrep="$RUNNING" ;;
+  backup)  b_cmd=$1 ;;
+  restore) b_cmd=$1 ;;
+  *) echo "Unknown option $1"; exit 1 ;;
+esac
+
+mars_mount="$HOME/mars/Backup"
+images_dir="$2"; [ -z $images_dir ] && images_dir="/var/lib/libvirt/images"
+backup_dir="$3"; [ -z $backup_dir ] && backup_dir="$mars_mount/$(hostname -s)/libvirt/backup"
+
+if [ ! -z $b_cmd ] ; then
+
+  if [[ $backup_dir =~ "$mars_mount/"* ]] ; then
+    # mars should be mounted
+    if ! findmnt $mars_mount > /dev/null; then
+      echo "$mars_mount is not mounted"; exit 1
+    fi
+  fi
+
+  [ ! -d $images_dir ] && { echo "Directory $images_dir does not exist"; exit 1; }
+  [ ! -d $backup_dir ] && { echo "Directory $backup_dir does not exist"; exit 1; }
+
+  backup_restore "$b_cmd"
+else
+  start_stop "$s_cmd" "$do_check" "$do_egrep"
+fi
+
+run $virsh list --all | awk '!/^$/'
+
+exit 0
+

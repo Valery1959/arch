@@ -1,0 +1,12 @@
+#!/bin/bash
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+cmd="$script_dir/sync/sync_macos_shared.sh"
+
+[ ! -x $cmd ] && { echo "Script $cmd does not exist or executable"; exit 1 ; }
+
+$cmd to
+
+exit $?
+

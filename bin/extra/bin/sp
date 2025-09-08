@@ -1,0 +1,19 @@
+#!/bin/bash
+# https://github.com/xvzc/SpoofDPI
+# SpoofDPI is fork GoodByDPI for Linux
+# install SpoofDPI:
+# curl -fsSL https://raw.githubusercontent.com/xvzc/SpoofDPI/main/install.sh | bash -s linux-amd64
+
+prog=".spoof-dpi/bin/spoof-dpi"
+
+pkill -f $prog
+
+#$HOME/$prog &
+$HOME/$prog > /dev/null 2>&1 &
+
+google-chrome --proxy-server="http://127.0.0.1:8080" > /dev/null 2>&1
+
+pkill -f $prog
+
+exit 0
+

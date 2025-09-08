@@ -1,0 +1,28 @@
+#!/bin/bash
+# mount mars partitons to ~/mars
+
+[[ $1 == 'u' ]] && umount=1
+
+mars=192.168.68.54
+
+#sudo apt install cifs-utils
+
+mounts="Software Users Backup Cinema"
+
+for m in $mounts
+do
+   d=~/mars/$m
+
+   if findmnt $d > /dev/null; then
+      sudo umount ~/mars/$m; [ $? -ne 0 ] && { echo "Cannot umount $d"; exit 1; }
+   fi
+
+   [ ! -z $umount ] && continue
+
+   mkdir -p ~/mars/$m; [ $? -ne 0 ] && { echo "Cannot mkdir -p $d"; exit 1; }
+
+   sudo mount -t cifs -o credentials=/root/.mars,uid=1000,gid=1000 //$mars/$m ~/mars/$m
+   [ $? -ne 0 ] && { echo "Cannot mount $m"; exit 1; }
+done
+
+exit 0

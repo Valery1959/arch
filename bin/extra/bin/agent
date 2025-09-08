@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# start ssh-agent
+ssh-agent -s
+
+# add git key to ssh agent
+ssh-add ~/.ssh/extra/git_rsa
+
+exit 0
+

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+host=$(hostname -s)
+
+case $host in
+   kio) dst="/media/valery/shared_t5" ;;
+   tio) dst="/media/valery/shared"    ;;
+   *) echo "Unknown host: $host"; exit 1 ;;
+esac
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+cmd="$script_dir/sync/sync_linux_shared.sh"
+
+[ ! -x $cmd ] && { echo "Script $cmd does not exist or executable"; exit 1 ; }
+[ ! -d $dst ] && { echo "Destination directory does not exist: $dst"; exit 1 ; }
+
+$cmd $dst
+
+exit $?
+

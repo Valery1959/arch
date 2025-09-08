@@ -1,0 +1,11 @@
+#!/bin/bash
+# https://github.com/yt-dlp/yt-dlp
+# install yt-dlp
+# mkdir $HOME/bin/yt-dlp
+# curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o $HOME/bin/yt-dlp/yt-dlp
+# chmod 0750 $HOME/bin/yt-dlp/yt-dlp
+
+$HOME/bin/yt-dlp/yt-dlp $@
+
+exit 0
+

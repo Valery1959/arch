@@ -1,0 +1,14 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+host="$1"; [ -z "$host" ] && { echo "You should pass hostname as first arg"; exit -1; }
+
+run ssh "$host" "mkdir -p ~/.ssh" 
+run rsync ~/.ssh/id_rsa.pub $host:~/.ssh/authorized_keys
+
+exit 0
+
