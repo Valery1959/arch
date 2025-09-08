@@ -90,6 +90,9 @@ run systemctl enable NetworkManager.service
 echo "Enable sshd"
 run systemctl enable sshd
 
+echo "Enable ssh agent service (for git clone/push/pull)"
+systemctl enable --user ssh-agent.service
+
 # post install after reboot
 # localectl set-keymap us
 # timedatectl set-ntp true
