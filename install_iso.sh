@@ -146,21 +146,33 @@ if [ $dzap ] ; then
 fi
 
 run mkfs.fat -F32 -n EFI $par1
-#run mkfs.ext4 -L ROOT $par2
 run mkfs.btrfs $par2
 
 run mount $par2 /mnt
 run btrfs subvolume create /mnt/@
 run btrfs subvolume create /mnt/@home
-
-run btrfs subvolume create /mnt/@sddm
+run btrfs subvolume create /mnt/@log
+run btrfs subvolume create /mnt/@tmp
+run btrfs subvolume create /mnt/@spool
+run btrfs subvolume create /mnt/@cache
+run btrfs subvolume create /mnt/@libvirt
 
 run umount /mnt
 
-run mount -o compress=zstd,subvol=@ $par2 /mnt
-#run mkdir -p /mnt/home
-run mount -m -o compress=zstd,subvol=@home $par2 /mnt/home
-run mount -m -o subvol=@sddm $par2 /mnt/var/lib/sddm
+if [ ! -z $p ] ; then # nvme device
+   #mo="rw,noatime,compress-force=zstd:1,space_cache=v2"
+   mo="compress=zstd:1"
+else
+   mo="compress=zstd:5"
+fi
+
+run mount    -o ${mo},subvol=@        $par2 /mnt
+run mount -m -o ${mo},subvol=@home    $par2 /mnt/home
+run mount -m -o ${mo},subvol=@log     $par2 /mnt/var/log
+run mount -m -o ${mo},subvol=@tmp     $par2 /mnt/var/tmp
+run mount -m -o ${mo},subvol=@cache   $par2 /mnt/var/cache
+run mount -m -o ${mo},subvol=@spool   $par2 /mnt/var/spool
+run mount -m -o ${mo},subvol=@libvirt $par2 /mnt/var/lib/libvirt
 
 run mount -m $par1 /mnt/boot/efi
 
