@@ -114,6 +114,17 @@ run snapper -c home ls         # For home
 echo "--- Enable grub-btrfsd service:"
 run sudo systemctl enable --now grub-btrfsd.service
 
+file=/etc/mkinitcpio.conf
+line='^HOOKS=.*grub-btrfs-overlayfs.*'
+[ ! -f $file ] || grep -qE "$line" "$file" || add_hook_grub=1
+
+if [ ! -z $add_hook_grub ] ; then
+   echo "--- Add the hook grub-btrfs-overlayfs at the end of HOOKS in /etc/mkinitcpio.conf"
+   sudo sed -i -e 's/\(HOOKS=.*\)\()\)/\1 grub-btrfs-overlayfs)/g' $file
+   echo "--- Re-generate initramfs"
+   sudo mkinitcpio -P
+fi
+
 # -------------------------------------------------
 # 3. Enable Automatic Timeline Snapshots
 # -------------------------------------------------
