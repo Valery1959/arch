@@ -1,12 +1,8 @@
 #!/bin/bash
-# The service below should be run to properly run ssh-agent
+# The service below and env variable SSH_AUTH_SOCK should be iset up to properly run ssh-agent
 # systemctl enable --user ssh-agent.service
-
-case $XDG_CURRENT_DESKTOP in
-  KDE) export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket ;;
-  GNOME) export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh ;;
-  *) echo "$XDG_CURRENT_DESKTOP is not supported"; exit 1 ;;
-esac
+# KDE:   export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/ssh-agent.socket ;;
+# GNOME: export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh ;;
 
 # start ssh-agent
 ssh-agent -s
