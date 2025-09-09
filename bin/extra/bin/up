@@ -1,12 +1,24 @@
 #!/bin/bash
-# Upgrade system
+
+rel_file="/etc/os-release"
+
+getAttribute()
+{
+  cat $1 | grep -E "$2" | sed -e "s/$2//g" -e 's/"//g'
+}
 
 run()
 {
-  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'"; exit 1; }
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
 }
 
-run sudo pacman -Syu
+case $(getAttribute $rel_file '^NAME=') in
+  "Linux Mint"|"Ubuntu"|"Zorin OS") run sudo apt update; run sudo apt upgrade ;;
+  "Arch Linux")                     run sudo pacman -Syu ;;
+  "Fedora Linux")                   run sudo dnf update ;;
+  "openSUSE Tu"*)                   run sudo zypper ref; run sudo zypper up ;;
+  *) echo "Unknown Linux version: $os_name"; exit 1 ;;
+esac
 
 exit 0
 
