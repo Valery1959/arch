@@ -117,7 +117,7 @@ run $script_dir/extra/install_yazi.sh
 
 # Install some user scripts
 run mkdir -p $HOME/bin
-run cp $script_dir/extra/bin/* $HOME/bin
+run cp -r $script_dir/extra/bin/* $HOME/bin
 
 exit 0
 
