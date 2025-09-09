@@ -19,6 +19,7 @@ source $script_dir/utils.sh
 # tmux (Terminal Multiplexer)
 # htop (Process Manager)
 # btop (Process Manager)
+# procs (Modern replacement for the traditional ps)
 # python (Scripting Language)       - installed
 # sudo (Run as Root)                - installed
 # zsh (Shell)
@@ -31,7 +32,7 @@ source $script_dir/utils.sh
 # reflector (Arch mirror updater) 
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
 
-packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
+packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils"
 
 # CLI tools
 # tree (Directory listing)
@@ -39,7 +40,9 @@ packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
 # jq (JSON processor)
 # bc (An arbitrary precision calculator language)
 # zip (ZIP archiver)
+# 7zip (7-ZIP archiver)
 # unzip (ZIP unarchiver)
+# unrar (RAR unarchiver)
 # whois (Whois client)
 # wget (CLI downloader)
 # rlwrap (Readline wrapper)
@@ -53,7 +56,7 @@ packages="fastfetch neovim git tmux htop btop zsh less reflector inetutils"
 # eza (/bin/ls improvement)
 # zoxide (smarter cd command)
 
-packages="$packages tree fzf jq bc zip unzip whois wget rlwrap bat ripgrep fd gdu lazygit bottom yazi eza zoxide"
+packages="$packages tree fzf jq bc 7zip zip unzip unrar whois wget rlwrap bat ripgrep fd gdu lazygit bottom yazi eza zoxide"
 
 # Development
 # base-devel (Basic Build Tools)

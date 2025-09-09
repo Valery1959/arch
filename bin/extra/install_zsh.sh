@@ -9,6 +9,11 @@ if [ ! -f $HOME/.zshrc ] ; then
    run "cp $script_dir/config/.zshrc $HOME"
 fi
 
+if [ ! -f $HOME/.vimrc ] ; then
+   echo "Installing .vimrc"
+   run "cp $script_dir/config/.vimrc $HOME"
+fi
+
 if [ ! -f $HOME/.config/zsh/zsh-autosuggestions ] ; then
    echo "Removing $HOME/.config/zsh/zsh-autosuggestions"
    run "rm -rf $HOME/.config/zsh/zsh-autosuggestions"
