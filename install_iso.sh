@@ -52,7 +52,7 @@ typeset -i rsize=$5; [ $rsize -ne 0 ] && rs="+${rsize}G" || rs="-${rsize}"
 extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, you should pass size of root parttion"; exit 1; }
 
 # partitions, n is incremental count started form 1
-# /dev/sdXn - mandatory - EFI, 550M default size
+# /dev/sdXn - mandatory - EFI, 1G default size
 # /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by defalt
 # /dev/sdXn - optional  - <name>,  mounted to /, size is til the end of disk
 
@@ -115,7 +115,7 @@ par3=${disk}${p}3
 
 echo "Disk $disk will be partitioned as follows"
 echo " EFI: $par1 : vfat"
-echo "ROOT: $par2 : ext4"
+echo "ROOT: $par2 : btrfs"
 
 [ $extra ] && echo "$extra: $par3 : ext4"
 
@@ -131,7 +131,7 @@ if [ $dzap ] ; then
    echo "Format $disk and mound partitions"
    run sgdisk -Z ${disk}
    run sgdisk -a 2048 -o ${disk} 
-   run sgdisk -n 1::+550M -t 1:ef00 -c 1:EFI ${disk}
+   run sgdisk -n 1::+1G   -t 1:ef00 -c 1:EFI ${disk}
    run sgdisk -n 2::${rs} -t 2:8300 -c 2:ROOT ${disk}
 
    if [ $extra ] ; then
