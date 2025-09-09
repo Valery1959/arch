@@ -29,7 +29,8 @@ run sudo pacman -Syu
 grep_pci_devices "nvidia" || { echo "NVIDIA device not found, skipping NVIDIA drivers installation" ; exit 0; }
 
 echo "--- installing NVIDIA drivers ..."
-run sudo pacman -S --needed --noconfirm linux-headers nvidia-dkms nvidia-utils 
+#run sudo pacman -S --needed --noconfirm linux-headers nvidia-dkms nvidia-utils nvidia-settings
+run sudo pacman -S --needed --noconfirm linux-headers nvidia-open nvidia-utils nvidia-settings
 
 exit 0
 
