@@ -67,6 +67,10 @@ if [ $? -eq 0 ] ; then
   lsblk /dev/$disk -o "name,partlabel,label,size,fsused,UUID,model"
   read -r -p "Disk $disk has partitions (see above), remove them? (y|n)" answer
   [[ $answer == [yY] ]] || dzap= # keep disk partitions as is
+  if [ -z $dzap ] ; then
+     read -r -p "Continue installation? (y|n)" answer
+     [[ $answer == [yY] ]] || exit 0
+  fi
 fi
 
 # get local timezone
