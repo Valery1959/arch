@@ -81,7 +81,7 @@ run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs op
 
 echo "Install grub and configure grub"
 #run grub-install --efi-directory /boot/efi --bootloader-id=ArchLinux --recheck
-run grub-install --efi-directory /boot/efi --bootloader-id=ArchLinux
+run grub-install --efi-directory /boot/efi --bootloader-id=Arch
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
@@ -89,9 +89,6 @@ run systemctl enable NetworkManager.service
 
 echo "Enable sshd"
 run systemctl enable sshd
-
-echo "Enable ssh agent service (for git clone/push/pull)"
-systemctl enable --user ssh-agent.service
 
 # post install after reboot
 # localectl set-keymap us
