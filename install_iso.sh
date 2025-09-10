@@ -51,6 +51,9 @@ typeset -i rsize=$5; [ $rsize -ne 0 ] && rs="+${rsize}G" || rs="-${rsize}"
 # set up optional extra partition with name passed, if size of root partition is passed
 extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, you should pass size of root parttion"; exit 1; }
 
+# set optional bootloader-id
+boot_id=$7; [ -z $boot_id ] && boot_id="ArchLinux"
+
 # partitions, n is incremental count started form 1
 # /dev/sdXn - mandatory - EFI, 1G default size
 # /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by defalt
@@ -68,9 +71,12 @@ if [ $? -eq 0 ] ; then
   read -r -p "Disk $disk has partitions (see above), remove them? (y|n)" answer
   [[ $answer == [yY] ]] || dzap= # keep disk partitions as is
   if [ -z $dzap ] ; then
-     read -r -p "Continue installation? (y|n)" answer
-     [[ $answer == [yY] ]] || exit 0
+     msg="Continue installation? (First two partitions will be formatted) (y|n)"
+  else
+     msg="Continue installation? ($disk will be erazed) (y|n)"
   fi
+  read -r -p "$msg" answer
+  [[ $answer == [yY] ]] || exit 0
 fi
 
 # get local timezone
@@ -202,7 +208,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #run cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 run cp -r ${dir} /mnt/root
 
-( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local")
+( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$boot_id")
 
 run touch /mnt/root/arch.exit.$?
 
