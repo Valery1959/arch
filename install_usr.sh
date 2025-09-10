@@ -84,7 +84,7 @@ echo "Install grub and configure grub"
 #run grub-install --efi-directory /boot/efi --bootloader-id=Arch
 #run grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot/efi --removable
 #run grub-install --target=x86_64-efi --bootloader-id=qwert --efi-directory=/boot/efi --recheck
-run grub-install --target=x86_64-efi --bootloader-id=asdf --efi-directory=/boot/efi
+run grub-install --target=x86_64-efi --bootloader-id=ArchLinux --efi-directory=/boot/efi
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
