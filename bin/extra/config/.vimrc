@@ -1,4 +1,4 @@
-colorscheme ron
+colorscheme default
 filetype plugin on
 syntax on
 set incsearch

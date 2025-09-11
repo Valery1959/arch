@@ -153,11 +153,9 @@ if [ $dzap ] ; then
    if [ $extra ] ; then
       run mkfs.ext4 -L $extra $par3
    fi
-   run mkfs.btrfs $par2
-else
-   run mkfs.btrfs -f $par2
 fi
 
+run mkfs.btrfs -f $par2
 run mkfs.fat -F32 -n EFI $par1
 
 run mount $par2 /mnt
