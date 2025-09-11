@@ -1,0 +1,18 @@
+#!/bin/bash
+
+[ -z $1 ] && { echo "You should pass git project directory as first argument"; exit 1; }
+[ -z $2 ] && { echo "You should pass git target  directory as second argument"; exit 1; }
+
+[ ! -d $1 ] && { echo "Directory $1 does not exist"; exit 1;  }
+[ ! -d ${1}/.git ] && { echo "Directory $1 is not git project directory"; exit 1; }
+
+dst=$(realpath $2)
+
+[ -d $dst ] && { echo "Target directory $dst already exist"; exit 1; }
+
+mkdir -p $2; [ $? -ne 0 ] && exit 1
+
+cd $1; git archive main | tar -x -C $dst
+
+exit 0
+
