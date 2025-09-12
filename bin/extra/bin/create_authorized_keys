@@ -1,0 +1,11 @@
+#!/bin/bash
+
+run()
+{
+  echo "Run '$@'"; "$@"; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
+
+run ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+
+exit 0
+

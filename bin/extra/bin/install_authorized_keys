@@ -7,8 +7,10 @@ run()
 
 host="$1"; [ -z "$host" ] && { echo "You should pass hostname as first arg"; exit -1; }
 
-run ssh "$host" "mkdir -p ~/.ssh" 
-run rsync ~/.ssh/id_rsa.pub $host:~/.ssh/authorized_keys
+#run ssh "$host" "mkdir -p ~/.ssh" 
+#run rsync ~/.ssh/id_rsa.pub $host:~/.ssh/authorized_keys
+
+run ssh-copy-id -i ~/.ssh/id_ed25519.pub $host
 
 exit 0
 
