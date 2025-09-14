@@ -9,7 +9,7 @@ what="$1"; [ -z "$what" ] && { echo "Usage: $(basename $0) plasma-desktop||plasm
 # essential KDE apps
 system="dolphin ksystemlog partitionmanager"
 utils="konsole kate kcharselect kweather"
-multi="kdenlive vlc"
+multi="kdenlive vlc vlc-plugins-all"
 graph="gwenview okular gimp"
 #games="kbreakout knights"
 

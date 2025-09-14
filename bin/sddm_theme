@@ -1,0 +1,20 @@
+#!/bin/bash
+#
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
+
+theme=$1; [ -z $theme ] && theme=breeze
+
+file=/usr/lib/sddm/sddm.conf.d/default.conf; [ ! -f $file ] && { echo "File $file does not exist" ; exit 1; }
+
+tdir=/usr/share/sddm/themes
+
+[ ! -d $tdir/$theme ] && { echo "Theme $theme does not exists in $tdir"; exit 1; }
+
+echo "--- Updating curent theme in $file to $theme"
+sudo sed -i -e 's/\(^Current=\)\(.*\)/\1'$theme'/g' $file
+
+exit 0
+
