@@ -107,6 +107,7 @@ fi
 # configure rust (default stable branch)
 # configure neovim (add astro configuration)
 # configure alacritty terminal, zoxide, eza and yazi
+# configure tmux
 run $script_dir/extra/install_zsh.sh
 run $script_dir/extra/install_rust.sh
 run $script_dir/extra/install_astro.sh
@@ -114,6 +115,7 @@ run $script_dir/extra/install_alacritty.sh
 run $script_dir/extra/install_zoxide.sh
 run $script_dir/extra/install_eza.sh
 run $script_dir/extra/install_yazi.sh
+run $script_dir/extra/install_tmux.sh
 
 # Install some user scripts
 run mkdir -p $HOME/bin
