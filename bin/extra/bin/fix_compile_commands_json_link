@@ -18,16 +18,18 @@ relink()
 }
 
 res=$(printf "%s" $src_link | sed -e "s|$src_dbg|$dst_dbg|g")
-if [ -f $res ] && [[ "$src_link" != "$res" ]] ; then
-  relink "$res"
-  exit 0
+if [ -f $res ] ; then
+  if [[ "$src_link" != "$res" ]] ; then
+    relink "$res"
+  fi 
+else
+  res=$(printf "%s" $src_link | sed -e "s|$src_rel|$dst_rel|g")
+  if [ -f $res ] && [[ "$src_link" != "$res" ]] ; then
+    relink "$res"
+  fi
 fi
 
-res=$(printf "%s" $src_link | sed -e "s|$src_rel|$dst_rel|g")
-if [ -f $res ] && [[ "$src_link" != "$res" ]] ; then
-  relink "$res"
-  exit 0
-fi
+[ -h $cmd_json ] && sed -i -e 's/-mno-direct-extern-access//g' $cmd_json
 
 exit 0
 
