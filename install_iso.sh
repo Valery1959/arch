@@ -73,19 +73,19 @@ lsblk -n -l -o type,name | grep -E "^part\s+$disk" > /dev/null 2>&1
 if [ $? -eq 0 ] ; then
   batch_mode= # need to answer some questions
   lsblk /dev/$disk -o "name,partlabel,label,size,fsused,UUID,model"
-  read -r -p "Disk $disk has partitions (see above), remove them? (y|n)" answer
+  read -r -p "Disk $disk has partitions (see above), remove them? (y|n) " answer
   [[ $answer == [yY] ]] || dzap= # keep disk partitions as is
   if [ -z $dzap ] ; then
-      read -r -p "Enter boot partition number for $disk" boot_part
-      read -r -p "Enter root partition number for $disk" root_part
+      read -r -p "Enter boot partition number for disk $disk " boot_part
+      read -r -p "Enter root partition number for disk $disk " root_part
       if [ $extra ] ; then
-         read -r -p "Enter extra partition number for $disk" extra_part
+         read -r -p "Enter extra partition number for disk $disk " extra_part
       fi
   fi
   if [ -z $dzap ] ; then
-     msg="Continue installation? ($boot_part and $root_part partitions will be formatted) (y|n)"
+     msg="Continue installation? ($boot_part and $root_part partitions will be formatted) (y|n) "
   else
-     msg="Continue installation? ($disk will be erazed) (y|n)"
+     msg="Continue installation? ($disk will be erazed) (y|n) "
   fi
   read -r -p "$msg" answer
   [[ $answer == [yY] ]] || exit 0
@@ -162,7 +162,7 @@ else
 fi
 
 if [ -z $batch_mode ] ; then
-  read -r -p "Continue installation? (y|n)" answer
+  read -r -p "Continue installation? (y|n) " answer
   [[ $answer == [yY] ]] || exit 0
 fi
 
