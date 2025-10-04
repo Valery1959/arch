@@ -148,10 +148,10 @@ if [ $dzap ] ; then
        echo "$extra: $par3 : ext4"
    fi
 else
-   check_partition $disk ${p}${boot_part} $par1
-   check_partition $disk ${p}${root_part} $par2
+   run check_partition $disk ${p}${boot_part} $par1
+   run check_partition $disk ${p}${root_part} $par2
    if [ $extra ] ; then
-      check_partition $disk ${p}${extra_part} $par3
+      run check_partition $disk ${p}${extra_part} $par3
    fi
    echo "Disk $disk will be formatted as follows"
    echo " EFI: $par1 : vfat"
