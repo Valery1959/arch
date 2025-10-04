@@ -49,29 +49,41 @@ pass=$4
 typeset -i rsize=$5; [ $rsize -ne 0 ] && rs="+${rsize}G" || rs="-${rsize}"
 
 # set up optional extra partition with name passed, if size of root partition is passed
-extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, you should pass size of root parttion"; exit 1; }
+extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, you should pass size of root partition"; exit 1; }
 
 # set optional bootloader-id
 boot_id=$7; [ -z $boot_id ] && boot_id="ArchLinux"
 
 # partitions, n is incremental count started form 1
 # /dev/sdXn - mandatory - EFI, 1G default size
-# /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by defalt
+# /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by default
 # /dev/sdXn - optional  - <name>,  mounted to /, size is til the end of disk
 
 echo "$disks" | grep -E "^${disk}$" > /dev/null 2>&1
 [ $? -ne 0 ] && { echo "Disk $disk is not found"; exit -1; }
 
 dzap=1 # Zap (destroy) the GPT and MBR data structures on disk by default
+boot_part=1
+root_part=2
+extra_part=3
+batch_mode=1
 
 # Check if disk is empty
 lsblk -n -l -o type,name | grep -E "^part\s+$disk" > /dev/null 2>&1
 if [ $? -eq 0 ] ; then
+  batch_mode= # need to answer some questions
   lsblk /dev/$disk -o "name,partlabel,label,size,fsused,UUID,model"
   read -r -p "Disk $disk has partitions (see above), remove them? (y|n)" answer
   [[ $answer == [yY] ]] || dzap= # keep disk partitions as is
   if [ -z $dzap ] ; then
-     msg="Continue installation? (First two partitions will be formatted) (y|n)"
+      read -r -p "Enter boot partition number for $disk" boot_part
+      read -r -p "Enter root partition number for $disk" root_part
+      if [ $extra ] ; then
+         read -r -p "Enter extra partition number for $disk" extra_part
+      fi
+  fi
+  if [ -z $dzap ] ; then
+     msg="Continue installation? ($boot_part and $root_part partitions will be formatted) (y|n)"
   else
      msg="Continue installation? ($disk will be erazed) (y|n)"
   fi
@@ -119,15 +131,41 @@ umount -A -R -q /mnt # just for sure, exits with code 1 if no mount
 # set full disk name and partitons:
 [[ $disk == "nvme"* ]] && p=p
 disk="/dev/$disk"
-par1=${disk}${p}1
-par2=${disk}${p}2
-par3=${disk}${p}3
+par1=${disk}${p}${boot_part}
+par2=${disk}${p}${root_part}
+par3=${disk}${p}${extra_part}
 
-echo "Disk $disk will be partitioned as follows"
-echo " EFI: $par1 : vfat"
-echo "ROOT: $par2 : btrfs"
+check_partition()
+{
+   lsblk -l $1 | grep -q -E "^\b${2}\b" || { echo "$3 does not exist"; exit 1; }
+}
 
-[ $extra ] && echo "$extra: $par3 : ext4"
+check_partition $disk ${p}${boot_part} $par1
+check_partition $disk ${p}${root_part} $par2
+if [ $extra ] ; then
+    check_partition $disk ${p}${extra_part} $par3
+fi
+
+if [ $dzap ] ; then
+   echo "Disk $disk will be partitioned as follows"
+   echo " EFI: $par1 : vfat"
+   echo "ROOT: $par2 : btrfs"
+   if [ $extra ] ; then
+       echo "$extra: $par3 : ext4"
+   fi
+else
+   echo "Disk $disk will be formatted as follows"
+   echo " EFI: $par1 : vfat"
+   echo "ROOT: $par2 : btrfs"
+   if [ $extra ] ; then
+      echo "$par3 will be mounted as /$extra partition"
+   fi
+fi
+
+if [ -z $batch_mode ] ; then
+  read -r -p "Continue installation? (y|n)" answer
+  [[ $answer == [yY] ]] || exit 0
+fi
 
 if [ $dzap ] ; then
    # format disk as follows:
