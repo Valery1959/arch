@@ -130,7 +130,8 @@ umount -A -R -q /mnt # just for sure, exits with code 1 if no mount
 
 # set full disk name and partitons:
 [[ $disk == "nvme"* ]] && p=p
-disk="/dev/$disk"
+devn="$disk"      # save  short device name
+disk="/dev/$disk" # create full device name
 par1=${disk}${p}${boot_part}
 par2=${disk}${p}${root_part}
 par3=${disk}${p}${extra_part}
@@ -148,10 +149,10 @@ if [ $dzap ] ; then
        echo "$extra: $par3 : ext4"
    fi
 else
-   run check_partition $disk ${p}${boot_part} $par1
-   run check_partition $disk ${p}${root_part} $par2
+   run check_partition $disk ${devn}${p}${boot_part} $par1
+   run check_partition $disk ${devn}${p}${root_part} $par2
    if [ $extra ] ; then
-      run check_partition $disk ${p}${extra_part} $par3
+      run check_partition $disk ${devn}${p}${extra_part} $par3
    fi
    echo "Disk $disk will be formatted as follows"
    echo " EFI: $par1 : vfat"
