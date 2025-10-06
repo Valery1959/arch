@@ -6,7 +6,7 @@ source $script_dir/../utils.sh
 
 cfg="$HOME/.config"
 
-[ -d $cfg/yazi ] && run rm -r $cfg/yazi
+[ -d $cfg/yazi ] && run rm -rf $cfg/yazi
 
 # setup packages for yazi preview, find, change dir
 # zoxide p7zip fzf fd ripgrep already have to be installed,
