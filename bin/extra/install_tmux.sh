@@ -9,7 +9,7 @@ source $script_dir/../utils.sh
 echo "Install tmux config"
 dir=$HOME/.config/tmux; [ -d $dir ] && run rm -rf $dir
 run mkdir -p $dir
-run cp $script_dir/config/tmux.conf $dir
+run cp $script_dir/config/tmux/tmux.conf $dir
 
 echo "Install tmux pluginmanager"
 tpm="$HOME/.tmux/plugins/tpm"; [ -d $tpm ] && run rm -rf $tpm
