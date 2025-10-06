@@ -355,6 +355,20 @@ install_packages()
   fi
 }
 
+install_yay()
+{
+  if ! installed yay ; then
+    cur_dir=$(pwd)
+    # run git clone https://aur.archlinux.org/yay.git /tmp/yay
+    # cd /tmp/yay; run makepkg -si --noconfirm --needed
+    # temporary solution while https://aur.archlinux.org/yay.git does not work
+    run git clone --depth 1 --branch v12.5.2 https://github.com/Jguer/yay /tmp/yay
+    cd /tmp/yay; run make; run sudo make install
+    cd $cur_dir
+    run rm -rf /tmp/yay
+  fi
+}
+
 install_phelpers()
 {
   if [ $os_base = "arch" ]; then

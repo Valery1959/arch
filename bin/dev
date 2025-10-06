@@ -87,11 +87,7 @@ fonts="ttf-mononoki-nerd ttf-jetbrains-mono-nerd"
 
 run sudo pacman -S --noconfirm --needed $fonts
 
-if ! installed yay ; then
-  run git clone https://aur.archlinux.org/yay.git
-  cd yay; makepkg -si --noconfirm --needed; cd ..
-  run rm -rf yay
-fi
+run install_yay
 
 if ! installed code ; then
   run yay visual-studio-code-bin -S --noconfirm --needed

@@ -60,12 +60,7 @@ echo "-----------------------------------------------"
 echo "--- Update system ..."
 run sudo pacman -Syu  
 
-if ! installed yay ; then
-  run sudo pacman -S --needed --noconfirm git base-devel
-  run git clone https://aur.archlinux.org/yay.git
-  cd yay; makepkg -si --noconfirm --needed; cd ..
-  run rm -rf yay
-fi
+run install_yay
 
 run yay -Syu
 
