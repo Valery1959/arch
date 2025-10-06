@@ -191,10 +191,10 @@ if [ $dzap ] ; then
    if [ $extra ] ; then
       run mkfs.ext4 -L $extra $par3
    fi
+   run mkfs.fat -F32 -n EFI $par1
 fi
 
 run mkfs.btrfs -f $par2
-run mkfs.fat -F32 -n EFI $par1
 
 run mount $par2 /mnt
 run btrfs subvolume create /mnt/@
