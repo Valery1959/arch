@@ -54,6 +54,9 @@ extra=$6; [ $extra ] && [ $rsize -eq 0 ] && { echo "To create extra partition, y
 # set optional bootloader-id
 boot_id=$7; [ -z $boot_id ] && boot_id="ArchLinux"
 
+# set optional removable option for disk
+disk_rm=$8
+
 # partitions, n is incremental count started form 1
 # /dev/sdXn - mandatory - EFI, 1G default size
 # /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by default
@@ -83,7 +86,7 @@ if [ $? -eq 0 ] ; then
       fi
   fi
   if [ -z $dzap ] ; then
-     msg="Continue installation? ($root_part partition will be formatted) (y|n) "
+     msg="Continue installation? (${disk}${root_part} partition will be formatted) (y|n) "
   else
      msg="Continue installation? ($disk will be erazed) (y|n) "
   fi
@@ -154,9 +157,8 @@ else
    if [ $extra ] ; then
       run check_partition $disk ${devn}${p}${extra_part} $par3
    fi
-   echo "Disk $disk will be formatted as follows"
-   echo " EFI: $par1 : vfat"
-   echo "ROOT: $par2 : btrfs"
+   echo "$par2 will be formatted as new btrfs partition"
+   echo "$par1 will be mounted as fat32 /boot partition"
    if [ $extra ] ; then
       echo "$par3 will be mounted as /$extra partition"
    fi
@@ -245,7 +247,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #run cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 run cp -r ${dir} /mnt/root
 
-( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$boot_id")
+( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$boot_id" "$disk_rm")
 
 run touch /mnt/root/arch.exit.$?
 

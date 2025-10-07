@@ -13,6 +13,7 @@ user_name="$2"
 pass_word="$3"
 time_zone="$4"
 boot_id="$5"
+disk_rm="$6"; [ ! -z $disk_rm ] && removable="--removable"
 
 echo "Installing arch chroot"
 echo "Hostname: $host_name"
@@ -83,7 +84,7 @@ run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs op
 
 echo "Install grub and configure grub"
 #run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi
-run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot
+run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot "$removable"
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
