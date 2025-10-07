@@ -224,8 +224,7 @@ run mount -m -o ${mo},subvol=@cache   $par2 /mnt/var/cache
 run mount -m -o ${mo},subvol=@spool   $par2 /mnt/var/spool
 run mount -m -o ${mo},subvol=@libvirt $par2 /mnt/var/lib/libvirt
 
-#run mount -m $par1 /mnt/boot/efi
-run mount -m $par1 /mnt/boot
+run mount -m $par1 /mnt/boot/efi
 
 if [ $extra ] ; then
   run mount -m $par3 /mnt/$extra
