@@ -82,7 +82,8 @@ run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs op
 #run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
-run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi
+#run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi
+run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot
 run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"

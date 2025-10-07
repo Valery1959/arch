@@ -83,7 +83,7 @@ if [ $? -eq 0 ] ; then
       fi
   fi
   if [ -z $dzap ] ; then
-     msg="Continue installation? ($boot_part and $root_part partitions will be formatted) (y|n) "
+     msg="Continue installation? ($root_part partition will be formatted) (y|n) "
   else
      msg="Continue installation? ($disk will be erazed) (y|n) "
   fi
@@ -222,7 +222,8 @@ run mount -m -o ${mo},subvol=@cache   $par2 /mnt/var/cache
 run mount -m -o ${mo},subvol=@spool   $par2 /mnt/var/spool
 run mount -m -o ${mo},subvol=@libvirt $par2 /mnt/var/lib/libvirt
 
-run mount -m $par1 /mnt/boot/efi
+#run mount -m $par1 /mnt/boot/efi
+run mount -m $par1 /mnt/boot
 
 if [ $extra ] ; then
   run mount -m $par3 /mnt/$extra
