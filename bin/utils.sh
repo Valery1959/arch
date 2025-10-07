@@ -367,6 +367,7 @@ install_yay()
     cd $cur_dir
     run rm -rf /tmp/yay
   fi
+  return 0
 }
 
 install_phelpers()
