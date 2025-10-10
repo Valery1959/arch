@@ -83,9 +83,10 @@ run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs op
 #run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
-run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id
+run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
+run grub-mkconfig -o /efi/grub/grub.cfg
 #run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi "$removable"
-run grub-mkconfig -o /boot/grub/grub.cfg
+#run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
 run systemctl enable NetworkManager.service

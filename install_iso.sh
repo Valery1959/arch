@@ -196,7 +196,7 @@ if [ $dzap ] ; then
    run mkfs.fat -F32 -n EFI $par1
 fi
 
-run mkfs.btrfs -f $par2
+run mkfs.btrfs -L "$boot_id" -f $par2
 
 run mount $par2 /mnt
 run btrfs subvolume create /mnt/@
