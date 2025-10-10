@@ -206,6 +206,7 @@ run btrfs subvolume create /mnt/@tmp
 run btrfs subvolume create /mnt/@spool
 run btrfs subvolume create /mnt/@cache
 run btrfs subvolume create /mnt/@libvirt
+run btrfs subvolume create /mnt/@snapshots
 
 run umount /mnt
 
@@ -216,15 +217,17 @@ else
    mo="compress=zstd"
 fi
 
-run mount    -o ${mo},subvol=@        $par2 /mnt
-run mount -m -o ${mo},subvol=@home    $par2 /mnt/home
-run mount -m -o ${mo},subvol=@log     $par2 /mnt/var/log
-run mount -m -o ${mo},subvol=@tmp     $par2 /mnt/var/tmp
-run mount -m -o ${mo},subvol=@cache   $par2 /mnt/var/cache
-run mount -m -o ${mo},subvol=@spool   $par2 /mnt/var/spool
-run mount -m -o ${mo},subvol=@libvirt $par2 /mnt/var/lib/libvirt
+run mount    -o ${mo},subvol=@          $par2 /mnt
+run mount -m -o ${mo},subvol=@home      $par2 /mnt/home
+run mount -m -o ${mo},subvol=@log       $par2 /mnt/var/log
+run mount -m -o ${mo},subvol=@tmp       $par2 /mnt/var/tmp
+run mount -m -o ${mo},subvol=@cache     $par2 /mnt/var/cache
+run mount -m -o ${mo},subvol=@spool     $par2 /mnt/var/spool
+run mount -m -o ${mo},subvol=@libvirt   $par2 /mnt/var/lib/libvirt
+run mount -m -o ${mo},subvol=@snapshots $par2 /mnt/.shapshots
 
-run mount -m $par1 /mnt/boot/efi
+#run mount -m $par1 /mnt/boot/efi
+run mount -m $par1 /mnt/efi
 
 if [ $extra ] ; then
   run mount -m $par3 /mnt/$extra
