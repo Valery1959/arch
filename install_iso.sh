@@ -127,7 +127,7 @@ run sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 run pacman -Sy 
 # do not trust mirror list from reflector - http connections
 # run cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
-# run reflector -a 48 -c $country -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+# run reflector --verbose -p https -a 48 -c $country -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 
 umount -A -R -q /mnt # just for sure, exits with code 1 if no mount
 
