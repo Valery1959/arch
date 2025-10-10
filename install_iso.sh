@@ -157,8 +157,8 @@ else
    if [ $extra ] ; then
       run check_partition $disk ${devn}${p}${extra_part} $par3
    fi
-   echo "$par2 will be formatted as new btrfs partition"
-   echo "$par1 will be mounted as fat32 /boot partition"
+   echo "$par2 will be formatted as btrfs partition"
+   echo "$par1 will be mounted as /efi partition"
    if [ $extra ] ; then
       echo "$par3 will be mounted as /$extra partition"
    fi
