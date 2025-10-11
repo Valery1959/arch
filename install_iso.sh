@@ -177,6 +177,10 @@ else
    fi
 fi
 
+if [ ! -z $crypt_device ] ; then
+   echo "LUKS1 will be set up on $par2 with name: $crypt_device"
+fi
+
 if [ -z $batch_mode ] ; then
   read -r -p "Continue installation? (y|n) " answer
   [[ $answer == [yY] ]] || exit 0

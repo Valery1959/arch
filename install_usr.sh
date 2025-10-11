@@ -125,7 +125,7 @@ if [ ! -z $crypt_dev ] ; then
    file="/etc/default/grub"; [ ! -f $file ] && { echo "File $file does not exist" ; exit 1; }
 
    echo "--- Add crypt device to $file"
-   line="cryptdevice=$(blkid -s UUID -o value ${root_part}):$crypt_dev"
+   line="cryptdevice=UUID=$(blkid -s UUID -o value ${root_part}):$crypt_dev"
    sed -i -e 's/\(^GRUB_CMDLINE_LINUX_DEFAULT=.*\)\(\"\)/\1 '$line'\"/g' $file
 
    echo "--- Add luks to preload modules to $file"
@@ -150,10 +150,12 @@ echo "Configure grub"
 grub_cfg="/efi/grub/grub.cfg"
 run grub-mkconfig -o $grub_cfg
 
-echo "Verify that grub.cfg has entries for insmod cryptodisk and insmod luks"
-grep 'cryptodisk\|luks' $grub_cfg
-grep 'cryptodisk' $grub_cfg &> /dev/null || { echo "cryptodisk does not exist in $grub_cfg"; exit 1; }
-grep 'liks'       $grub_cfg &> /dev/null || { echo "luks entry does not exist in $grub_cfg"; exit 1; }
+if [ ! -z $crypt_dev ] ; then
+   echo "Verify that grub.cfg has entries for insmod cryptodisk and insmod luks"
+   grep 'cryptodisk\|luks' $grub_cfg
+   grep 'cryptodisk' $grub_cfg &> /dev/null || { echo "cryptodisk does not exist in $grub_cfg"; exit 1; }
+   grep 'luks'       $grub_cfg &> /dev/null || { echo "luks entry does not exist in $grub_cfg"; exit 1; }
+fi
 
 #run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi "$removable"
 #run grub-mkconfig -o /boot/grub/grub.cfg
