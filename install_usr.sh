@@ -14,6 +14,8 @@ pass_word="$3"
 time_zone="$4"
 boot_id="$5"
 disk_rm="$6"; [ ! -z $disk_rm ] && removable="--removable"
+crypt_dev="$7"
+root_part="$8"
 
 echo "Installing arch chroot"
 echo "Hostname: $host_name"
@@ -34,9 +36,11 @@ run sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoer
 
 echo "Adding host $host_name to /etc/hostname and /etc/hosts"
 echo "$host_name" > /etc/hostname
-echo "127.0.0.1    localhost" >> /etc/hosts
-echo "::1          localhost" >> /etc/hosts
-echo "127.0.1.1    ${host_name}.localdomain    $host_name" >> /etc/hosts
+echo "# Static table lookup for hostnames." > /etc/hosts
+echo "# See hosts(5) for details."         >> /etc/hosts
+echo "127.0.0.1        localhost"          >> /etc/hosts
+echo "::1              localhost"          >> /etc/hosts
+echo "127.0.1.1        ${host_name}.localdomain        $host_name" >> /etc/hosts
 
 echo "Setting time zone to $time_zone"
 run ln -s /usr/share/zoneinfo/${time_zone} /etc/localtime
@@ -79,12 +83,78 @@ fi
 echo "Install other essential packages"
 run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs openssh rsync vim $microcode
 
+if [ ! -z $crypt_dev ] ; then
+   # Create key file
+   key_file="/crypto_keyfile.bin"
+   run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
+   run chmod 600 $key_file
+   run cryptsetup luksAddKey ${root_part} $key_file
+
+   [ ! -f $key_file ] && { echo "File $key_file does not exist"; exit 1; }
+
+   # Edit /etc/mkinitcpio.conf, and recreate the initramfs image
+   # MODULES=(btrfs)
+   # FILES=(/crypto_keyfile.bin)
+   # HOOKS=(base udev keyboard autodetect keymap consolefont modconf block encrypt filesystems fsck)
+   file="/etc/mkinitcpio.conf"; [ ! -f $file ] && { echo "File $file does not exist" ; exit 1; }
+
+   grep -qE '^MODULES=' "$file" || { echo "Cannot find MODULES in $file"; exit 1; }
+   grep -qE '^FILES='   "$file" || { echo "Cannot find FILES   in $file"; exit 1; }
+   grep -qE '^HOOKS='   "$file" || { echo "Cannot find HOOKS   in $file"; exit 1; }
+
+   grep -qE '^MODULES=\(\)' "$file" || p1=' '
+   grep -qE '^FILES=\(\)'   "$file" || p2=' '
+
+   module="btrfs"
+   echo "--- Add module $module to $file"
+   sed -i -e 's/\(^MODULES=.*\)\()\)/\1'"${p1}${module}"')/g' $file
+
+   echo "--- Add path to $key_file to $file"
+   sed -i -e 's/\(^FILES=.*\)\()\)/\1'"${p2}\\${key_file}"')/g' $file
+
+   echo "--- Add hook encrypt to $file"
+   sed -i -e 's/\(^HOOKS=.*\)\(filesystems\)/\1encrypt filesystems/g' $file
+
+   echo "--- Recreate the initramfs image"
+   run mkinitcpio -P
+
+   # Edit /etc/default/grub
+   # GRUB_CMDLINE_LINUX_DEFAULT="loglevel=3 quiet cryptdevice=UUID=UUID_OF_ENCRYPTED_PARTITION:cryptdev"
+   # GRUB_PRELOAD_MODULES="part_gpt part_msdos luks"
+   # GRUB_ENABLE_CRYPTODISK=y
+   file="/etc/default/grub"; [ ! -f $file ] && { echo "File $file does not exist" ; exit 1; }
+
+   echo "--- Add crypt device to $file"
+   line="cryptdevice=$(blkid -s UUID -o value ${root_part}):$crypt_dev"
+   sed -i -e 's/\(^GRUB_CMDLINE_LINUX_DEFAULT=.*\)\(\"\)/\1 '$line'\"/g' $file
+
+   echo "--- Add luks to preload modules to $file"
+   line="luks"
+   sed -i -e 's/\(^GRUB_PRELOAD_MODULES=.*\)\(\"\)/\1 '$line'\"/g' $file
+
+   echo "--- Enable crypto disk in $file"
+   line="y"
+   sed -i -e 's/\(#.*\)\(GRUB_ENABLE_CRYPTODISK=\)\(.*\)/\2'$line'/g' $file
+fi
+
 #echo "Create initial ramdisk environment"
 #run mkinitcpio -p linux
 
 echo "Install grub and configure grub"
 run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
-run grub-mkconfig -o /efi/grub/grub.cfg
+
+echo "Verify that a GRUB entry has been added to the UEFI bootloader"
+run efibootmgr
+
+echo "Configure grub"
+grub_cfg="/efi/grub/grub.cfg"
+run grub-mkconfig -o $grub_cfg
+
+echo "Verify that grub.cfg has entries for insmod cryptodisk and insmod luks"
+grep 'cryptodisk\|luks' $grub_cfg
+grep 'cryptodisk' $grub_cfg &> /dev/null || { echo "cryptodisk does not exist in $grub_cfg"; exit 1; }
+grep 'liks'       $grub_cfg &> /dev/null || { echo "luks entry does not exist in $grub_cfg"; exit 1; }
+
 #run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi "$removable"
 #run grub-mkconfig -o /boot/grub/grub.cfg
 

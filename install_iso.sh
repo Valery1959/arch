@@ -57,6 +57,19 @@ boot_id=$7; [ -z $boot_id ] && boot_id="ArchLinux"
 # set optional removable option for disk
 disk_rm=$8
 
+# set optional crypt device for disk, it will be crypt device name in /dev/mapper
+crypt_device=$9; [ ! -z $crypt_device ] && cryptsetup_pkg="cryptsetup"
+
+ptype_boot="ef00" # EFI system partition
+ptype_glfs="8300" # Generic Linux filesystem, including ext4, brtfs
+ptype_luks="8309" # Linux LUKS
+
+if [ -z $crypt_device ] ; then
+   ptype_root=${ptype_glfs}
+else
+   ptype_root=${ptype_luks}
+fi
+
 # partitions, n is incremental count started form 1
 # /dev/sdXn - mandatory - EFI, 1G default size
 # /dev/sdXn - mandatory - root, size is optional, size is til the end of disk by default
@@ -171,7 +184,7 @@ fi
 
 if [ $dzap ] ; then
    # format disk as follows:
-   # 1. Zap (destroy) the GPT and MBR data structures
+   # 1. Zap (destroy) the GPT and MBR data structures (-Z), clear partition table (--clear)
    # 2. Create new gpt disk 2048 alignment
    # 3. Create EFI partition
    # 4. Create ROOT partition 
@@ -179,13 +192,13 @@ if [ $dzap ] ; then
    # 6. Format EFI, and ROOT partitions
    #    Notes: -c option is partlabel, -n and -L options are labels
    echo "Format $disk and mound partitions"
-   run sgdisk -Z ${disk}
+   run sgdisk -Z --clear ${disk}
    run sgdisk -a 2048 -o ${disk} 
-   run sgdisk -n 1::+1G   -t 1:ef00 -c 1:EFI ${disk}
-   run sgdisk -n 2::${rs} -t 2:8300 -c 2:ROOT ${disk}
+   run sgdisk -n 1::+1G   -t 1:${ptype_boot} ${disk}
+   run sgdisk -n 2::${rs} -t 2:${ptype_root} ${disk}
 
    if [ $extra ] ; then
-     run sgdisk -n 3::-0 -t 3:8300 -c 3:${extra} ${disk}
+     run sgdisk -n 3::-0 -t 3:${ptype_glfs} ${disk}
    fi
 
    run partprobe ${disk} 
@@ -196,9 +209,18 @@ if [ $dzap ] ; then
    run mkfs.fat -F32 -n EFI $par1
 fi
 
-run mkfs.btrfs -L "$boot_id" -f $par2
+if [ ! -z $crypt_device ] ; then
+   # Encrypt partition (only LUKS1 works correctly)
+   cryptsetup --type luks1 -v -y luksFormat ${par2}
+   cryptsetup open ${par2} $crypt_device
+   mdev="/dev/mapper/$crypt_device"
+else
+   mdev="$par2"
+fi
 
-run mount $par2 /mnt
+run mkfs.btrfs -L "$boot_id" -f $mdev
+
+run mount $mdev /mnt
 run btrfs subvolume create /mnt/@
 run btrfs subvolume create /mnt/@home
 run btrfs subvolume create /mnt/@log
@@ -217,20 +239,20 @@ else
    mo="compress=zstd"
 fi
 
-run mount    -o ${mo},subvol=@          $par2 /mnt
-run mount -m -o ${mo},subvol=@home      $par2 /mnt/home
-run mount -m -o ${mo},subvol=@log       $par2 /mnt/var/log
-run mount -m -o ${mo},subvol=@tmp       $par2 /mnt/var/tmp
-run mount -m -o ${mo},subvol=@cache     $par2 /mnt/var/cache
-run mount -m -o ${mo},subvol=@spool     $par2 /mnt/var/spool
-run mount -m -o ${mo},subvol=@libvirt   $par2 /mnt/var/lib/libvirt
-run mount -m -o ${mo},subvol=@snapshots $par2 /mnt/.shapshots
+run mount    -o ${mo},subvol=@          $mdev /mnt
+run mount -m -o ${mo},subvol=@home      $mdev /mnt/home
+run mount -m -o ${mo},subvol=@log       $mdev /mnt/var/log
+run mount -m -o ${mo},subvol=@tmp       $mdev /mnt/var/tmp
+run mount -m -o ${mo},subvol=@cache     $mdev /mnt/var/cache
+run mount -m -o ${mo},subvol=@spool     $mdev /mnt/var/spool
+run mount -m -o ${mo},subvol=@libvirt   $mdev /mnt/var/lib/libvirt
+run mount -m -o ${mo},subvol=@snapshots $mdev /mnt/.shapshots
 
 #run mount -m $par1 /mnt/boot/efi
 run mount -m $par1 /mnt/efi
 
 if [ $extra ] ; then
-  run mount -m $par3 /mnt/$extra
+   run mount -m $par3 /mnt/$extra
 fi
 
 echo "Init pacman keys and pupulate them from archlinux"
@@ -238,7 +260,7 @@ run pacman-key --init
 run pacman-key --populate archlinux
 
 echo "Install essential packages (minimal)"
-run pacstrap -K /mnt base linux linux-firmware sudo
+run pacstrap -K /mnt base linux linux-firmware sudo $cryptsetup_pkg
 
 echo "Generate fstab"
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -249,7 +271,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 #run cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 run cp -r ${dir} /mnt/root
 
-( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$boot_id" "$disk_rm")
+( arch-chroot /mnt $HOME/$(basename $dir)/install_usr.sh "$host" "$user" "$pass" "$tz_local" "$boot_id" "$disk_rm" "$crypt_device" "$par2")
 
 run touch /mnt/root/arch.exit.$?
 
