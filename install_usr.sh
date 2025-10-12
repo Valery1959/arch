@@ -130,13 +130,14 @@ if [ ! -z $crypt_dev ] ; then
    echo "--- Enable crypto disk in $file"
    line="y"
    sed -i -e 's/\(#.*\)\(GRUB_ENABLE_CRYPTODISK=\)\(.*\)/\2'$line'/g' $file
+
+   echo "Install grub into efi partition, as root partition is encrypted"
+   boot_dir="--boot-directory=/efi"
 fi
 
-#echo "Create initial ramdisk environment"
-#run mkinitcpio -p linux
-
 echo "Install grub and configure grub"
-run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
+#run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
+run grub-install --efi-directory=/efi "$boot_dir" --bootloader-id=$boot_id "$removable"
 
 if [ -z $disk_rm ] ; then
    echo "Verify that a GRUB entry has been added to the UEFI bootloader"
