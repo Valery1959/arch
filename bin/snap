@@ -65,7 +65,7 @@ run install_yay
 run yay -Syu
 
 echo "--- Install the necessary packages ..."
-run sudo pacman -S --needed --noconfirm grub-btrfs inotify-tools snapper snap-pac 
+run sudo pacman -S --needed --noconfirm base-devel grub-btrfs inotify-tools snapper snap-pac
 run yay btrfs-assistant -S --noconfirm --needed
 
 # Create config commands below to do the following:
@@ -115,6 +115,12 @@ line='^HOOKS=.*grub-btrfs-overlayfs.*'
 [ ! -f $file ] || grep -qE "$line" "$file" || add_hook_grub=1
 
 if [ ! -z $add_hook_grub ] ; then
+   #
+   # Edit /etc/default/grub-btrfs/config as follows
+   #
+   # GRUB_BTRFS_GBTRFS_DIRNAME="/efi/grub" # grub.cfg
+   # GRUB_BTRFS_GRUB_DIRNAME="/efi/grub"   # grub-btrfs.cfg
+   #
    echo "--- Add the hook grub-btrfs-overlayfs at the end of HOOKS in /etc/mkinitcpio.conf"
    sudo sed -i -e 's/\(HOOKS=.*\)\()\)/\1 grub-btrfs-overlayfs)/g' $file
    echo "--- Re-generate initramfs"

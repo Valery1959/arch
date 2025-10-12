@@ -86,9 +86,9 @@ run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs op
 if [ ! -z $crypt_dev ] ; then
    # Create key file
    key_file="/crypto_keyfile.bin"
-   run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
-   run chmod 600 $key_file
-   run cryptsetup luksAddKey ${root_part} $key_file
+   #run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
+   #run chmod 600 $key_file
+   #run cryptsetup luksAddKey ${root_part} $key_file
 
    [ ! -f $key_file ] && { echo "File $key_file does not exist"; exit 1; }
 
