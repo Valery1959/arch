@@ -60,6 +60,9 @@ disk_rm=$8
 # set optional crypt device for disk, it will be crypt device name in /dev/mapper
 crypt_device=$9; [ ! -z $crypt_device ] && cryptsetup_pkg="cryptsetup"
 
+# Set optional crypt password, and if not passed setup it as user passed (see later)
+crypt_passwd="$10"
+
 ptype_boot="ef00" # EFI system partition
 ptype_glfs="8300" # Generic Linux filesystem, including ext4, brtfs
 ptype_luks="8309" # Linux LUKS
@@ -117,8 +120,11 @@ ifconfig_co="ifconfig.co/country-iso"
 country=$(curl -4 --fail -s $ifconfig_co)
 [ -z $country ] && { echo "Cannot obtain country from $ifconfig_co"; exit -1; }
 
-# set password if needed
+# set passwords if needed
 [ -z $pass ] && { echo "Password is not passed, set password for user '$user' manually"; set_password; }
+#
+# If crypt password is not passed, setup it as user passed,
+[ -z $crypt_passwd ] && crypt_passwd="$pass"
 
 echo "Installing arch linux"
 echo "Diskname: $disk"
@@ -215,8 +221,8 @@ fi
 
 if [ ! -z $crypt_device ] ; then
    # Encrypt partition (only LUKS1 works correctly)
-   run cryptsetup --type luks1 luksFormat ${par2} <<< $pass
-   run cryptsetup open ${par2} $crypt_device <<< $pass
+   run cryptsetup --type luks1 luksFormat ${par2} <<< $crypt_passwd
+   run cryptsetup open ${par2} $crypt_device <<< $crypt_passwd
    mdev="/dev/mapper/$crypt_device"
 else
    mdev="$par2"
@@ -264,7 +270,7 @@ if [ ! -z $crypt_device ] ; then
    key_file="/mnt/crypto_keyfile.bin"
    run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
    run chmod 600 $key_file
-   run cryptsetup luksAddKey ${par2} $key_file <<< $pass
+   run cryptsetup luksAddKey ${par2} $key_file <<< $crypt_passwd
 fi
 
 echo "Init pacman keys and pupulate them from archlinux"
