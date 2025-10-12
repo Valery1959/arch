@@ -60,12 +60,12 @@ echo "-----------------------------------------------"
 echo "--- Update system ..."
 run sudo pacman -Syu  
 
-run install_yay
-
-run yay -Syu
-
 echo "--- Install the necessary packages ..."
 run sudo pacman -S --needed --noconfirm base-devel grub-btrfs inotify-tools snapper snap-pac
+
+run install_yay
+run yay -Syu
+
 run yay btrfs-assistant -S --noconfirm --needed
 
 # Create config commands below to do the following:
@@ -118,9 +118,23 @@ if [ ! -z $add_hook_grub ] ; then
    #
    # Edit /etc/default/grub-btrfs/config as follows
    #
-   # GRUB_BTRFS_GBTRFS_DIRNAME="/efi/grub" # grub.cfg
-   # GRUB_BTRFS_GRUB_DIRNAME="/efi/grub"   # grub-btrfs.cfg
+   # GRUB_BTRFS_GBTRFS_DIRNAME="/efi/grub" # grub-btrfs.cfg
+   # GRUB_BTRFS_GRUB_DIRNAME="/efi/grub"   # grub.cfg
    #
+   file="/etc/default/grub-btrfs/config"; [ ! -f $file ] && { echo "File $file does not exist" ; exit 1; }
+   gdir="/efi/grub"
+   line="\/efi\/grub"
+
+   if [ -f $gdir/grub-btrfs.cfg ] ; then
+      echo "--- Change location of grub-btrfs.cfg in $file"
+      sed -i -e 's/\(#.*\)\(GRUB_BTRFS_GBTRFS_DIRNAME=\)\(.*\)/\2\"'$line'\"/g' $file
+   fi
+
+   if [ -f $gdir/grub.cfg ] ; then
+      echo "--- Change location of grub.cfg in $file"
+      sed -i -e 's/\(#.*\)\(GRUB_BTRFS_GRUB_DIRNAME=\)\(.*\)/\2\"'$line'\"/g' $file
+   fi
+
    echo "--- Add the hook grub-btrfs-overlayfs at the end of HOOKS in /etc/mkinitcpio.conf"
    sudo sed -i -e 's/\(HOOKS=.*\)\()\)/\1 grub-btrfs-overlayfs)/g' $file
    echo "--- Re-generate initramfs"
