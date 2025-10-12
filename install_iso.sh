@@ -185,7 +185,6 @@ fi
 
 if [ ! -z $crypt_device ] ; then
    echo "LUKS1 will be set up on $par2 with name: $crypt_device"
-   echo "crypt:...${crypt_passwd}..."
 fi
 
 if [ -z $batch_mode ] ; then
