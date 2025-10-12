@@ -84,13 +84,8 @@ echo "Install other essential packages"
 run pacman -S --noconfirm --needed networkmanager grub efibootmgr btrfs-progs openssh rsync vim $microcode
 
 if [ ! -z $crypt_dev ] ; then
-   # Create key file
-   key_file="/crypto_keyfile.bin"
-   #run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
-   #run chmod 600 $key_file
-   #run cryptsetup luksAddKey ${root_part} $key_file
-
-   [ ! -f $key_file ] && { echo "File $key_file does not exist"; exit 1; }
+   # key file have to be created
+   key_file="/crypto_keyfile.bin"; [ ! -f $key_file ] && { echo "File $key_file does not exist"; exit 1; }
 
    # Edit /etc/mkinitcpio.conf, and recreate the initramfs image
    # MODULES=(btrfs)
@@ -143,8 +138,10 @@ fi
 echo "Install grub and configure grub"
 run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
 
-echo "Verify that a GRUB entry has been added to the UEFI bootloader"
-run efibootmgr
+if [ -z $disk_rm ] ; then
+   echo "Verify that a GRUB entry has been added to the UEFI bootloader"
+   run efibootmgr
+fi
 
 echo "Configure grub"
 grub_cfg="/efi/grub/grub.cfg"
