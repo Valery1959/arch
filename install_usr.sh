@@ -132,20 +132,16 @@ if [ ! -z $crypt_dev ] ; then
    sed -i -e 's/\(#.*\)\(GRUB_ENABLE_CRYPTODISK=\)\(.*\)/\2'$line'/g' $file
 
    echo "Install grub into efi partition, as root partition is encrypted"
-   boot_dir="--boot-directory=/efi"
+   boot_dir="/efi"
+   grub_cfg="/efi/grub/grub.cfg"
+else
+   echo "Install grub into /boot directory as root partition is not encrypted"
+   boot_dir="/boot"
+   grub_cfg="/boot/grub/grub.cfg"
 fi
 
 echo "Install grub and configure grub"
-#run grub-install --efi-directory=/efi --boot-directory=/efi --bootloader-id=$boot_id "$removable"
-run grub-install --efi-directory=/efi "$boot_dir" --bootloader-id=$boot_id "$removable"
-
-if [ -z $disk_rm ] ; then
-   echo "Verify that a GRUB entry has been added to the UEFI bootloader"
-   run efibootmgr
-fi
-
-echo "Configure grub"
-grub_cfg="/efi/grub/grub.cfg"
+run grub-install --efi-directory=/efi --boot-directory=$boot_dir --bootloader-id=$boot_id $removable
 run grub-mkconfig -o $grub_cfg
 
 if [ ! -z $crypt_dev ] ; then
@@ -154,9 +150,6 @@ if [ ! -z $crypt_dev ] ; then
    grep 'cryptodisk' $grub_cfg &> /dev/null || { echo "cryptodisk does not exist in $grub_cfg"; exit 1; }
    grep 'luks'       $grub_cfg &> /dev/null || { echo "luks entry does not exist in $grub_cfg"; exit 1; }
 fi
-
-#run grub-install --target=x86_64-efi --bootloader-id=$boot_id --efi-directory=/boot/efi "$removable"
-#run grub-mkconfig -o /boot/grub/grub.cfg
 
 echo "Enable network nanager"
 run systemctl enable NetworkManager.service
