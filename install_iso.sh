@@ -217,12 +217,6 @@ if [ ! -z $crypt_device ] ; then
    # Encrypt partition (only LUKS1 works correctly)
    run cryptsetup --type luks1 luksFormat ${par2} <<< $pass
    run cryptsetup open ${par2} $crypt_device <<< $pass
-
-   key_file="/mnt/crypto_keyfile.bin"
-   run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
-   run chmod 600 $key_file
-   run cryptsetup luksAddKey ${root_part} $key_file <<< $pass
-
    mdev="/dev/mapper/$crypt_device"
 else
    mdev="$par2"
@@ -270,7 +264,7 @@ if [ ! -z $crypt_device ] ; then
    key_file="/mnt/crypto_keyfile.bin"
    run dd bs=512 count=4 iflag=fullblock if=/dev/random of=$key_file
    run chmod 600 $key_file
-   run cryptsetup luksAddKey ${root_part} $key_file <<< $pass
+   run cryptsetup luksAddKey ${par2} $key_file <<< $pass
 fi
 
 echo "Init pacman keys and pupulate them from archlinux"
