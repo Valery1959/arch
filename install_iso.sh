@@ -61,7 +61,7 @@ disk_rm=$8
 crypt_device=$9; [ ! -z $crypt_device ] && cryptsetup_pkg="cryptsetup"
 
 # Set optional crypt password, and if not passed setup it as user passed (see later)
-crypt_passwd="$10"
+crypt_passwd="${10}"
 
 ptype_boot="ef00" # EFI system partition
 ptype_glfs="8300" # Generic Linux filesystem, including ext4, brtfs
