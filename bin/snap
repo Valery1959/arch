@@ -86,20 +86,20 @@ if [ $? -ne 0 ] ; then
 
    # 1. ensure /.snapshots is not mounted and does not exist
    # grep $sdir &> /dev/null <<< $(mount -t btrfs)
-   # if [ $? -eq 0 ] ; then
-   #    run sudo umount $sdir
-   #    run sudo rm -r $sdir
-   # fi
+   if [ $? -eq 0 ] ; then
+      run sudo umount $sdir
+      run sudo rm -r $sdir
+   fi
 
    # 2. create config files at /etc/snapper/configs/root
    run sudo snapper -c root create-config /
 
    # 3. delete /.snapper subvolume, then recreate /.snapper dir and remount it
    # --------- @snapshots mount must exist in fstab ---------
-   # run sudo btrfs subvolume delete $sdir
-   # run sudo mkdir $sdir
-   # run sudo chmod 0750 $sdir
-   # run sudo mount -a
+   run sudo btrfs subvolume delete $sdir
+   run sudo mkdir $sdir
+   run sudo chmod 0750 $sdir
+   run sudo mount -a
 fi
 
 # Check that snapper home config is not already created
