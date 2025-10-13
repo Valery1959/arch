@@ -238,6 +238,7 @@ run btrfs subvolume create /mnt/@tmp
 run btrfs subvolume create /mnt/@spool
 run btrfs subvolume create /mnt/@cache
 run btrfs subvolume create /mnt/@libvirt
+run btrfs subvolume create /mnt/.snapshot
 
 run umount /mnt
 
@@ -255,6 +256,7 @@ run mount -m -o ${mo},subvol=@tmp       $mdev /mnt/var/tmp
 run mount -m -o ${mo},subvol=@cache     $mdev /mnt/var/cache
 run mount -m -o ${mo},subvol=@spool     $mdev /mnt/var/spool
 run mount -m -o ${mo},subvol=@libvirt   $mdev /mnt/var/lib/libvirt
+run mount -m -o ${mo},subvol=.snapshot  $mdev /mnt/.snapshot
 
 #run mount -m $par1 /mnt/boot/efi
 run mount -m $par1 /mnt/efi
