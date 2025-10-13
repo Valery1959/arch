@@ -61,18 +61,53 @@ echo "--- Update system ..."
 run sudo pacman -Syu  
 
 echo "--- Install the necessary packages ..."
-run sudo pacman -S --needed --noconfirm base-devel git grub-btrfs inotify-tools snapper snap-pac
-run install_yay
-run yay -Syu
-run yay btrfs-assistant -S --noconfirm --needed
+run sudo pacman -S --needed --noconfirm grub-btrfs inotify-tools snapper snap-pac btrfs-assistant
+#run sudo pacman -S --needed --noconfirm base-devel git grub-btrfs inotify-tools snapper snap-pac
+#run install_yay
+#run yay -Syu
+#run yay btrfs-assistant -S --noconfirm --needed
 
 # Create config commands below to do the following:
 # 1. Create config files at /etc/snapper/configs/root and home
 # 2. Add root and home to SNAPPER_CONFIGS in /etc/conf.d/snapper
 # 3. Create subvolumes .snapshots and @home/.snapshots
-echo "--- Create snapper configurations for the root (/) and home (/home) subvolumes"
-sudo snapper list-configs | grep -E "^root .*" > /dev/null 2>&1 || run sudo snapper -c root create-config /
-sudo snapper list-configs | grep -E "^home .*" > /dev/null 2>&1 || run sudo snapper -c home create-config /home
+
+# Check that snapper root config is not already created
+grep -E "^root .*" &> /dev/null <<< $(snapper list-configs)
+
+if [ $? -ne 0 ] ; then
+   # Create snapper config files for root partition
+   # snapper create-config automatically creates a subvolume .snapshots
+   # with the root subvolume @ as its parent, that is not needed for
+   # the suggested filesystem layout, and can be deleted.
+
+   echo "--- Create snapper configurations for the root (/) subvolume"
+   sdir="/.snapshots" # snapshot dir to fix
+
+   # 1. ensure /.snapshots is not mounted and does not exist
+   grep $sdir &> /dev/null <<< $(mount -t btrfs)
+   if [ $? -eq 0 ] ; then
+      run sudo umount $sdir
+      run sudo rm -r $sdir
+   fi
+
+   # 2. create config files at /etc/snapper/configs/root
+   run sudo snapper -c root create-config /
+
+   # 3. delete /.snapper subvolume, then recreate /.snapper dir and remount it
+   # --------- @snapshots mount must exist in fstab ---------
+   run sudo btrfs subvolume delete $sdir
+   run sudo mkdir $sdir
+   run sudo chmod 0750 $sdir
+   run sudo mount -a
+fi
+
+# Check that snapper home config is not already created
+grep -E "^home .*" &> /dev/null <<< $(snapper list-configs)
+if [ $? -ne 0 ] ; then
+   echo "--- Create snapper configurations for the home (/home) subvolume"
+   run sudo snapper -c home create-config /home
+fi
 
 echo "--- Verify snapper configurations"
 run sudo snapper list-configs
