@@ -31,8 +31,8 @@ source $script_dir/utils.sh
 # yay (AUR) (AUR helper)            - specific install
 # reflector (Arch mirror updater) 
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
-
-packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils"
+# remmina                           - remote desktop client
+packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils remmina"
 
 # CLI tools
 # tree (Directory listing)
