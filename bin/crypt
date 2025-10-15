@@ -1,0 +1,139 @@
+#!/bin/bash
+#
+# https://sysguides.com/install-fedora-42-with-snapshot-and-rollback-support
+#
+# To ensure important user data is preserved when rolling back
+# Snapper snapshots of the home subvolume, it's a good idea to
+# separate certain application directories into their own subvolumes.
+# This way, they remain unaffected by Snapper's undochange or rollback operations.
+#
+# Post release step for btrfs - install snapper and other tools reqired to manage snapshots
+#
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
+
+map_id="shared"
+dmount="/$map_id"
+mapdev="/dev/mapper/$map_id"
+
+# home subdirs to be crypted
+home_subdirs=".ssh .neko"
+
+umount_device()
+{
+   findmnt -r -o target | grep -E -q "^${1}$" && run sudo umount "$1"
+}
+
+# close crypt device
+close_device()
+{
+   for d in $home_subdirs
+   do
+     umount_device "$HOME/$d"
+   done
+   umount_device "$dmount"
+   run sudo cryptsetup close $map_id
+}
+
+# Create key file, Format crypt device, add key file, create btrfs fs, create root subvolume
+init_device()
+{
+   [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
+   [ -z "$2" ] && { echo "You should pass passwd as 3rd argument"; exit 1; }
+
+   read -r -p "Device $1 will be formatted, continue? (y/n) " answer
+
+   [[ $answer == [yY] ]] || return
+
+   if [ ! -z "$3" ] ; then
+      if [ -f "$3" ] ; then
+         read -r -p "Key file $3 already exist, overwrite? (y/n) " answer
+         [[ $answer == [yY] ]] || return
+      fi
+      run touch "$3"
+   fi
+
+   run sudo cryptsetup luksFormat $1         <<< "$2"
+   run sudo cryptsetup open       $1 $map_id <<< "$2"
+
+   if [ ! -z "$3" ] ; then
+      run dd bs=512 count=4 iflag=fullblock if=/dev/random of="$3"
+      run chmod 600 "$3"
+      run sudo cryptsetup luksAddKey $1 "$3" <<< "$2"
+   fi
+
+   run sudo mkfs.btrfs -L  $map_id $mapdev
+   run sudo mount          $mapdev $dmount
+   run sudo btrfs subvolume create $dmount/@
+   run sudo umount                 $dmount
+   run sudo cryptsetup close       $map_id
+}
+
+# Bind source crypted dir to target dir
+bind_directories()
+{
+   [[ ! -d "$1" ]] && run mkdir -p "$1" # make source if does not exist
+   [[ ! -d "$2" ]] && run mkdir -p "$2" # make target if does not exist
+
+   if [[ $(ls -A "$2" | wc -l) -ne 0 ]] ; then
+      # target dir is not emoty
+      if [ $(ls -A "$1" | wc -l) -eq 0 ] ; then
+         # source is empty, and target is not empty, move data from target dir to source dir 
+         # run cp -ar "${2}/." "$1"
+         # run rm -rf "${2}/.*"; run rm -rf "${2}/*"
+         run rsync -lrpt "${2}/" "$1"
+         run find "$2" -mindepth 1 -delete
+      else
+         echo "ERROR: cannot bind $1 to $2, both dirs are not empty"; close_device; exit 1         
+      fi
+   fi
+   # target dir is empry here
+   run sudo mount --bind "$1" "$2"
+}
+
+# Create subvolume if not exist
+create_subvolume()
+{
+   sudo btrfs subvolume show   "$1" &> /dev/null ||\
+    run btrfs subvolume create "$1"
+}
+
+# Open crypted device and bind crypted directories to targets
+open_device()
+{
+   [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
+   [ -z "$2" ] && { echo "You should pass passwd or key file as 3th argument"; exit 1; }
+
+   mo="compress=zstd:1"
+
+   if [ -f "$2" ] ; then
+      run sudo cryptsetup open --key-file $2 $1 $map_id
+   else
+      run sudo cryptsetup open $1 $map_id <<< "$2"
+   fi
+
+   run sudo mount -o ${mo},subvol=@ $mapdev $dmount
+   run sudo chown $(id -u -n):$(id -g -n)   $dmount
+
+   create_subvolume "$dmount/home"
+   for d in $home_subdirs
+   do
+      bind_directories "$dmount/home/$d" "$HOME/$d"
+   done
+}
+
+# actions    -> $1: init/open/close -i/-o/-c
+# init/open  -> $2: device
+# open       -> $3: passwd or key file
+# init       -> $3: passwd (mandatory), $4 key file (optional)
+case $1 in
+   -o|open)  open_device "$2" "$3"      ;;
+   -i|init)  init_device "$2" "$3" "$4" ;;
+   -c|close) close_device               ;;
+   *) echo "Unknown action $1"; exit -1 ;;
+esac
+
+exit 0
+
