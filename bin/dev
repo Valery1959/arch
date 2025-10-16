@@ -70,8 +70,9 @@ packages="$packages tree fzf jq bc 7zip zip unzip unrar whois wget rlwrap bat ri
 # rustup (Rust Toolchain Installer)
 # valgrind (Memory debugger)
 # strace (Syscall tracer)
+# man (Man pages)
 
-packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind strace"
+packages="$packages base-devel cmake ninja clang nodejs npm rustup valgrind strace man"
 
 # Terminals
 # kitty (default teminal for tiling window manager)
