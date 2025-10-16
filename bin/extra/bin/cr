@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "crypt -o sdd11 /home/valery/.shared/.bin"
+
+[ ! -z $1 ] && { pkill ssh-agent; crypt -c; exit 1; }
+
+crypt -o sdd11 /home/valery/.shared/.bin
+
