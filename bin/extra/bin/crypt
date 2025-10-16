@@ -22,7 +22,7 @@ dmount="/$map_id"
 mapdev="/dev/mapper/$map_id"
 
 # home subdirs to be crypted
-home_subdirs=".ssh .mars .neko"
+home_subdirs=".ssh/extra .neko .mars"
 
 umount_device()
 {
