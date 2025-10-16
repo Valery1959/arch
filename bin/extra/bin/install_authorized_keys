@@ -6,11 +6,12 @@ run()
 }
 
 host="$1"; [ -z "$host" ] && { echo "You should pass hostname as first arg"; exit -1; }
+akey="$2"; [ -z "$akey" ] && akey="$HOME/.ssh/id_ed25519.pub"
 
-#run ssh "$host" "mkdir -p ~/.ssh" 
-#run rsync ~/.ssh/id_rsa.pub $host:~/.ssh/authorized_keys
+[ ! -f "$akey" ] && { echo "File $akey does not exist"; exit -1; }
 
-run ssh-copy-id -i ~/.ssh/id_ed25519.pub $host
+#run ssh-copy-id -i "$akey" $host
+echo ssh-copy-id -i "$akey" $host
 
 exit 0
 
