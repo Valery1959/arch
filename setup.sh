@@ -6,7 +6,7 @@ bin=$dir/bin
 
 source $bin/utils.sh
 
-[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome|nvidia|hyprland|snap"; exit -1; }
+[[ -z "$@" ]] && { echo "usage: $(basename $0) kvm|dev|kde|gnome|nvidia|amdgpu|hyprland|snap"; exit -1; }
 
 for arg in $@
 do
@@ -16,6 +16,7 @@ do
     kde) kde=1 ;;
     gnome) gnome=1 ;;
     nvidia) nvidia=1 ;;
+    amdgpu) amdgpu=1 ;;
     hyprland) hyprland=1; dev=1; gnome=1 ;;
     snap) snap=1 ;;
     *) echo "Unknown arg: $arg"; exit -1 ;; 
@@ -33,6 +34,8 @@ done
 [ ! -z $dev ] && run $bin/dev
 
 [ ! -z $nvidia ] && run $bin/nvidia
+
+[ ! -z $amdgpu ] && run $bin/amdgpu
 
 [ ! -z $hyprland ] && run $bin/hyprland
 

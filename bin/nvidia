@@ -1,14 +1,4 @@
 #!/bin/bash
-#
-# https://sysguides.com/install-fedora-42-with-snapshot-and-rollback-support
-#
-# To ensure important user data is preserved when rolling back
-# Snapper snapshots of the home subvolume, it's a good idea to
-# separate certain application directories into their own subvolumes.
-# This way, they remain unaffected by Snapper's undochange or rollback operations.
-#
-# Post release step for btrfs - install snapper and other tools reqired to manage snapshots
-#
 
 script_dir=$(cd $(dirname $0); pwd -P)
 

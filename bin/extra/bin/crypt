@@ -12,7 +12,10 @@
 
 script_dir=$(cd $(dirname $0); pwd -P)
 
-source $script_dir/utils.sh
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
 
 map_id="shared"
 dmount="/$map_id"
@@ -43,7 +46,9 @@ init_device()
    [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
    [ -z "$2" ] && { echo "You should pass passwd as 3rd argument"; exit 1; }
 
-   read -r -p "Device $1 will be formatted, continue? (y/n) " answer
+   dev="/dev/$1"; [ -b "$dev" ] || { echo "Device $1 does not exist"; exit 1; }
+
+   read -r -p "Device $dev will be formatted, continue? (y/n) " answer
 
    [[ $answer == [yY] ]] || return
 
@@ -55,13 +60,13 @@ init_device()
       run touch "$3"
    fi
 
-   run sudo cryptsetup luksFormat $1         <<< "$2"
-   run sudo cryptsetup open       $1 $map_id <<< "$2"
+   run sudo cryptsetup luksFormat $dev         <<< "$2"
+   run sudo cryptsetup open       $dev $map_id <<< "$2"
 
    if [ ! -z "$3" ] ; then
       run dd bs=512 count=4 iflag=fullblock if=/dev/random of="$3"
       run chmod 600 "$3"
-      run sudo cryptsetup luksAddKey $1 "$3" <<< "$2"
+      run sudo cryptsetup luksAddKey $dev "$3" <<< "$2"
    fi
 
    run sudo mkfs.btrfs -L  $map_id $mapdev
@@ -106,21 +111,27 @@ open_device()
    [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
    [ -z "$2" ] && { echo "You should pass passwd or key file as 3th argument"; exit 1; }
 
+   dev="/dev/$1"; [ -b "$dev" ] || { echo "Device $1 does not exist"; exit 1; }
+
    mo="compress=zstd:1"
 
    if [ -f "$2" ] ; then
-      run sudo cryptsetup open --key-file $2 $1 $map_id
+      run sudo cryptsetup open --key-file $2 $dev $map_id
    else
-      run sudo cryptsetup open $1 $map_id <<< "$2"
+      run sudo cryptsetup open $dev $map_id <<< "$2"
    fi
 
-   run sudo mount -o ${mo},subvol=@ $mapdev $dmount
-   run sudo chown $(id -u -n):$(id -g -n)   $dmount
+   cuser=$(id -u -n)
+   group=$(id -g -n)
 
+   run sudo mount -o ${mo},subvol=@ $mapdev $dmount
+   run sudo chown ${cuser}:${group} $dmount
+
+   # creat home subvolume for all users inside root subvolume
    create_subvolume "$dmount/home"
    for d in $home_subdirs
    do
-      bind_directories "$dmount/home/$d" "$HOME/$d"
+      bind_directories "$dmount/home/${cuser}/$d" "$HOME/$d"
    done
 }
 

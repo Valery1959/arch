@@ -1,0 +1,24 @@
+#!/bin/bash
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
+
+echo ""
+echo "-----------------------------------------------"
+echo "Install AMDGPU drivers"
+echo "-----------------------------------------------"
+
+echo "--- Update system ..."
+run sudo pacman -Syu  
+
+# detect GPU, and if it is not amdgpu, then do not install AMDGPU drivers
+grep_pci_devices "amdgpu" || { echo "AMDGPU device not found, skipping AMDGPU drivers installation" ; exit 0; }
+
+# mesa: DRI driver for 3D acceleration and VA-API/VDPAU drivers for accelerated video decoding
+# vulkan-radeon: vulkan support
+
+sudo pacman -S --needed --noconfirm mesa vulkan-radeon
+
+exit 0
+
