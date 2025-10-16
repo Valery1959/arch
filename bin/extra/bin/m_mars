@@ -21,7 +21,8 @@ do
 
    mkdir -p ~/mars/$m; [ $? -ne 0 ] && { echo "Cannot mkdir -p $d"; exit 1; }
 
-   sudo mount -t cifs -o credentials=/root/.mars,uid=1000,gid=1000 //$mars/$m ~/mars/$m
+   credentials="/home/$(id -u -n)/.mars/.mars,uid=$(id -u),gid=$(id -g)"
+   sudo mount -t cifs -o credentials=$credentials //$mars/$m ~/mars/$m
    [ $? -ne 0 ] && { echo "Cannot mount $m"; exit 1; }
 done
 
