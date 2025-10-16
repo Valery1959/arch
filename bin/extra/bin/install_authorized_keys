@@ -10,8 +10,7 @@ akey="$2"; [ -z "$akey" ] && akey="$HOME/.ssh/id_ed25519.pub"
 
 [ ! -f "$akey" ] && { echo "File $akey does not exist"; exit -1; }
 
-#run ssh-copy-id -i "$akey" $host
-echo ssh-copy-id -i "$akey" $host
+run ssh-copy-id -i "$akey" $host
 
 exit 0
 
