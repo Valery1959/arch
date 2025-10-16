@@ -18,7 +18,7 @@ echo "--- Update system ..."
 run sudo pacman -Syu  
 
 # detect GPU, and if it is not nvidia, then do not install NVIDIA drivers
-grep_pci_devices "nvidia" || { echo "NVIDIA device not found, skipping NVIDIA drivers installation" ; exit 0; }
+grep_pci_devices "vga.*nvidia" || { echo "NVIDIA device not found, skipping NVIDIA drivers installation" ; exit 0; }
 
 # Turing (NV160/TUXXX) and newer requires the following driver:
 #   nvidia-open for linux

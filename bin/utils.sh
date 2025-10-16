@@ -432,7 +432,7 @@ notwant_packages()
 
 grep_pci_devices()
 {
-  lspci | grep -i "$1" &> /dev/null; return $?
+  lspci | grep -iE "$1" &> /dev/null; return $?
 }
 
 grep_linux_group()
