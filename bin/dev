@@ -31,8 +31,9 @@ source $script_dir/utils.sh
 # yay (AUR) (AUR helper)            - specific install
 # reflector (Arch mirror updater) 
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
+# waypipe                           - A transparent proxy for Wayland applications
 # remmina                           - remote desktop client
-packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils remmina"
+packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils waypipe remmina"
 
 # CLI tools
 # tree (Directory listing)
