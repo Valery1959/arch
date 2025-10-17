@@ -24,6 +24,37 @@ mapdev="/dev/mapper/$map_id"
 # home subdirs to be crypted
 home_subdirs=".ssh/extra .neko .mars"
 
+enter_passwd()
+{
+   read -rs -p "Enter password: " pass_01; echo ""
+   read -rs -p "Retype password: " pass_02; echo ""
+   if [[ "$pass_01" != "$pass_02" ]] ; then
+      echo "Passwords do not match."
+      enter_passwd
+   elif [[ -z "$pass_01"  ]] ; then
+      echo "Password should not be empty."
+      enter_passwd
+   else
+      password="$pass_01"
+   fi
+   return 0
+}
+
+enter_k_pass()
+{
+   read -r -p "Enter password or key file: " k_passwd; [ -z $k_passwd ] && enter_k_pass; return 0
+}
+
+enter_k_file()
+{
+   read -r -p "Enter key file: " key_file; [ -z $key_file ] && enter_k_file; return 0
+}
+
+enter_device()
+{
+   read -r -p "Enter dev name: " n_device; [ -z $n_device ] && enter_device; return 0
+}
+
 umount_device()
 {
    findmnt -r -o target | grep -E -q "^${1}$" && run sudo umount "$1"
@@ -43,31 +74,24 @@ close_device()
 # Create key file, Format crypt device, add key file, create btrfs fs, create root subvolume
 init_device()
 {
-   [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
-   [ -z "$2" ] && { echo "You should pass passwd as 3rd argument"; exit 1; }
+   [ -z "$1" ] && enter_device || n_device="$1"; dev="/dev/$n_device"; [ -b "$dev" ] || { echo "$n_device does not exist"; exit 1; }
+   [ -z "$2" ] && enter_passwd || password="$2"
+   [ -z "$3" ] && enter_k_file || key_file="$3"
 
-   dev="/dev/$1"; [ -b "$dev" ] || { echo "Device $1 does not exist"; exit 1; }
+   if [ -f "$key_file" ] ; then
+      read -r -p "Key file $key_file already exist, overwrite? (y/n) " answer
+      [[ $answer == [yY] ]] || return
+   fi
 
    read -r -p "Device $dev will be formatted, continue? (y/n) " answer
-
    [[ $answer == [yY] ]] || return
 
-   if [ ! -z "$3" ] ; then
-      if [ -f "$3" ] ; then
-         read -r -p "Key file $3 already exist, overwrite? (y/n) " answer
-         [[ $answer == [yY] ]] || return
-      fi
-      run touch "$3"
-   fi
+   run dd bs=512 count=4 iflag=fullblock if=/dev/random of="$key_file"
+   run chmod 600 "$key_file"
 
-   run sudo cryptsetup luksFormat $dev         <<< "$2"
-   run sudo cryptsetup open       $dev $map_id <<< "$2"
-
-   if [ ! -z "$3" ] ; then
-      run dd bs=512 count=4 iflag=fullblock if=/dev/random of="$3"
-      run chmod 600 "$3"
-      run sudo cryptsetup luksAddKey $dev "$3" <<< "$2"
-   fi
+   run sudo cryptsetup luksFormat $dev             <<< "$password"
+   run sudo cryptsetup open       $dev $map_id     <<< "$password"
+   run sudo cryptsetup luksAddKey $dev "$key_file" <<< "$password"
 
    run sudo mkfs.btrfs -L  $map_id $mapdev
    run sudo mount          $mapdev $dmount
@@ -108,17 +132,15 @@ create_subvolume()
 # Open crypted device and bind crypted directories to targets
 open_device()
 {
-   [ -z "$1" ] && { echo "You should pass device as 2rd argument"; exit 1; }
-   [ -z "$2" ] && { echo "You should pass passwd or key file as 3th argument"; exit 1; }
-
-   dev="/dev/$1"; [ -b "$dev" ] || { echo "Device $1 does not exist"; exit 1; }
+   [ -z "$1" ] && enter_device || n_device="$1"; dev="/dev/$n_device"; [ -b "$dev" ] || { echo "$n_device does not exist"; exit 1; }
+   [ -z "$2" ] && enter_k_pass || k_passwd="$2"
 
    mo="compress=zstd:1"
 
-   if [ -f "$2" ] ; then
-      run sudo cryptsetup open --key-file $2 $dev $map_id
+   if [ -f "$k_passwd" ] ; then
+      run sudo cryptsetup open --key-file "$k_passwd" $dev $map_id
    else
-      run sudo cryptsetup open $dev $map_id <<< "$2"
+      run sudo cryptsetup open $dev $map_id <<< "$k_passwd"
    fi
 
    cuser=$(id -u -n)
@@ -127,7 +149,7 @@ open_device()
    run sudo mount -o ${mo},subvol=@ $mapdev $dmount
    run sudo chown ${cuser}:${group} $dmount
 
-   # creat home subvolume for all users inside root subvolume
+   # create home subvolume for all users inside root subvolume
    create_subvolume "$dmount/home"
    for d in $home_subdirs
    do
