@@ -2,4 +2,4 @@
 
 [ -z $1 ] && { echo "You should pass host as first argument"; exit 1; }
 
-waypipe ssh -i $HOME/.ssh/extra/id_ed25519 $1
+waypipe ssh -i $HOME/.ssh/extra/id_ed25519 $@
