@@ -21,8 +21,9 @@ map_id="shared"
 dmount="/$map_id"
 mapdev="/dev/mapper/$map_id"
 
-# home subdirs to be crypted
-home_subdirs=".ssh/extra .neko .mars"
+# home subdirs and files to be crypted
+home_crypt_sdirs=".ssh/extra .neko .mars"
+home_crypt_files=".ssh/config"
 
 enter_passwd()
 {
@@ -63,9 +64,13 @@ umount_device()
 # close crypt device
 close_device()
 {
-   for d in $home_subdirs
+   for crypt_file in $home_crypt_files
    do
-     umount_device "$HOME/$d"
+     umount_device "$HOME/$crypt_file"
+   done
+   for crypt_sdir in $home_crypt_sdirs
+   do
+     umount_device "$HOME/$crypt_sdir"
    done
    umount_device "$dmount"
    run sudo cryptsetup close $map_id
@@ -109,16 +114,36 @@ bind_directories()
    if [[ $(ls -A "$2" | wc -l) -ne 0 ]] ; then
       # target dir is not emoty
       if [ $(ls -A "$1" | wc -l) -eq 0 ] ; then
-         # source is empty, and target is not empty, move data from target dir to source dir 
+         # source is empty, and target is not empty, move data from target dir to source dir
          # run cp -ar "${2}/." "$1"
          # run rm -rf "${2}/.*"; run rm -rf "${2}/*"
          run rsync -lrpt "${2}/" "$1"
          run find "$2" -mindepth 1 -delete
       else
-         echo "ERROR: cannot bind $1 to $2, both dirs are not empty"; close_device; exit 1         
+         echo "ERROR: cannot bind $1 to $2, both dirs are not empty"; close_device; exit 1
       fi
    fi
    # target dir is empry here
+   run sudo mount --bind "$1" "$2"
+}
+
+# Bind source crypted file to target file
+bind_cryptedfile()
+{
+   [[ ! -f "$1" ]] && run touch "$1" # make source if does not exist
+   [[ ! -f "$2" ]] && run touch "$2" # make target if does not exist
+
+   if [[ $(stat --printf='%s' $2) -ne 0 ]] ; then
+      # target file is not emoty
+      if [ $(stat --printf='%s' $1) -eq 0 ] ; then
+         # source is empty, and target is not empty, copy data from target file to source file
+         run rsync -lrpt "${2}" "$1"
+         run truncate -s 0 "$2"
+      else
+         echo "ERROR: cannot bind $1 to $2, both files are not empty"; close_device; exit 1
+      fi
+   fi
+   # target dir is empty here
    run sudo mount --bind "$1" "$2"
 }
 
@@ -151,9 +176,17 @@ open_device()
 
    # create home subvolume for all users inside root subvolume
    create_subvolume "$dmount/home"
-   for d in $home_subdirs
+
+   # bound crypted home sub directores
+   for crypt_sdir in $home_crypt_sdirs
    do
-      bind_directories "$dmount/home/${cuser}/$d" "$HOME/$d"
+      bind_directories "$dmount/home/${cuser}/$crypt_sdir" "$HOME/$crypt_sdir"
+   done
+
+   # bound crypted home files
+   for crypt_file in $home_crypt_files
+   do
+      bind_cryptedfile "$dmount/home/${cuser}/$crypt_file" "$HOME/$crypt_file"
    done
 }
 
