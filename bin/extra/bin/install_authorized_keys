@@ -6,7 +6,7 @@ run()
 }
 
 host="$1"; [ -z "$host" ] && { echo "You should pass hostname as first arg"; exit -1; }
-akey="$2"; [ -z "$akey" ] && akey="$HOME/.ssh/id_ed25519.pub"
+akey="$2"; [ -z "$akey" ] && akey="$HOME/.ssh/extra/id_ed25519.pub"
 
 [ ! -f "$akey" ] && { echo "File $akey does not exist"; exit -1; }
 
