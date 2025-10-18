@@ -41,8 +41,10 @@ echo "-----------------------------------------------"
 echo "Prepare Home for Snapshots and Rollbacks"
 echo "-----------------------------------------------"
 create_home_subvolume mars
-create_home_subvolume .mozilla
+create_home_subvolume .mars
+create_home_subvolume .neko
 create_home_subvolume .ssh
+create_home_subvolume .mozilla
 create_home_subvolume .config/google-chrome
 
 restoreSEcon -RF $(ls -d ~/.* ~/*)
