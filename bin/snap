@@ -25,7 +25,7 @@ restoreSEcon()
 # -------------------------------------------------
 create_home_subvolume()
 {
-   sudo btrfs subvolume show ~/${1} > /dev/null 2>&1 && return # subvolume already exist
+   sudo btrfs subvolume show ~/${1} &> /dev/null && return # subvolume already exist
 
    if [ -d ~/${1} ] ; then
       run mv ~/${1} ~/${1}-old
