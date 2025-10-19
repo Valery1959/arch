@@ -17,9 +17,15 @@ run()
   echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
 }
 
-map_id="shared"
-dmount="/$map_id"
-mapdev="/dev/mapper/$map_id"
+m_map_principal="shared"
+m_map_secondary="mnt"
+
+set_mapdev()
+{
+   map_id="$1"
+   dmount="/$map_id"
+   mapdev="/dev/mapper/$map_id"
+}
 
 # home subdirs and files to be crypted
 home_crypt_sdirs=".ssh/extra .neko .mars"
@@ -64,6 +70,9 @@ umount_device()
 # close crypt device
 close_device()
 {
+   [ ! -b $mapdev ] && set_mapdev $m_map_secondary
+   [ ! -b $mapdev ] && { echo "Neither $m_map_principal or $m_map_secondary do not mapped"; exit 1; }
+
    for crypt_file in $home_crypt_files
    do
      umount_device "$HOME/$crypt_file"
@@ -154,11 +163,34 @@ create_subvolume()
     run btrfs subvolume create "$1"
 }
 
+check_dmount()
+{
+   d_mnt=$(findmnt -r -o target,source | grep -E "^$1 .*"); [ -z "$d_mnt" ] && return 0 # ok
+
+   d_dev=$(echo "$d_mnt" | cut -d' ' -f2)
+   if [ $d_dev != $dev ] ; then
+      echo "$dmount is mounted to $d_dev, instead of $dev"; return 1
+   else
+      echo "$dmount is already mounted to $d_dev"; exit 1
+   fi
+}
+
 # Open crypted device and bind crypted directories to targets
 open_device()
 {
    [ -z "$1" ] && enter_device || n_device="$1"; dev="/dev/$n_device"; [ -b "$dev" ] || { echo "$n_device does not exist"; exit 1; }
    [ -z "$2" ] && enter_k_pass || k_passwd="$2"
+
+   if ! check_dmount $dmount ; then
+      set_mapdev $m_map_secondary
+      if ! check_dmount $dmount ; then
+         echo "Both $m_map_principal and $m_map_secondary are mounted"; exit 1
+      fi
+   fi
+
+   [ ! -d $dmount ] && { "Directory $dmount does not exist"; exit 1; }
+
+   echo "Opening crypt device $dev and mounting to $dmount"
 
    mo="compress=zstd:1"
 
@@ -174,21 +206,25 @@ open_device()
    run sudo mount -o ${mo},subvol=@ $mapdev $dmount
    run sudo chown ${cuser}:${group} $dmount
 
-   # create home subvolume for all users inside root subvolume
-   create_subvolume "$dmount/home"
+   if [[ $map_id == $m_map_principal ]] ; then
+      # create home subvolume for all users inside root subvolume
+      create_subvolume "$dmount/home"
 
-   # bound crypted home sub directores
-   for crypt_sdir in $home_crypt_sdirs
-   do
-      bind_directories "$dmount/home/${cuser}/$crypt_sdir" "$HOME/$crypt_sdir"
-   done
+      # bound crypted home sub directores
+      for crypt_sdir in $home_crypt_sdirs
+      do
+         bind_directories "$dmount/home/${cuser}/$crypt_sdir" "$HOME/$crypt_sdir"
+      done
 
-   # bound crypted home files
-   for crypt_file in $home_crypt_files
-   do
-      bind_cryptedfile "$dmount/home/${cuser}/$crypt_file" "$HOME/$crypt_file"
-   done
+      # bound crypted home files
+      for crypt_file in $home_crypt_files
+      do
+         bind_cryptedfile "$dmount/home/${cuser}/$crypt_file" "$HOME/$crypt_file"
+      done
+   fi
 }
+
+set_mapdev $m_map_principal
 
 # actions    -> $1: init/open/close -i/-o/-c
 # init/open  -> $2: device
