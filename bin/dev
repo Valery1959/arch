@@ -33,7 +33,8 @@ source $script_dir/utils.sh
 # inetutils (A collection of common network programs (hostname, telnet, rsh. ftp, etc.)
 # waypipe                           - A transparent proxy for Wayland applications
 # remmina                           - remote desktop client
-packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils waypipe remmina"
+# freerdp                           - Free implementation of the Remote Desktop Protocol
+packages="fastfetch neovim git tmux htop btop procs zsh less reflector inetutils waypipe remmina freerdp"
 
 # CLI tools
 # tree (Directory listing)
