@@ -1,8 +1,44 @@
 #!/bin/bash
 
-echo "crypt -o sdd11 /home/valery/.shared/.bin"
+guid_src="68DD-5233"
+guid_dst="bc49f146-1920-452d-a6ed-a8ebe670919c"
+path_bin=".shared/.bin"
 
-[ ! -z $1 ] && { pkill ssh-agent; crypt -c; exit 1; }
+run()
+{
+  echo "Run '$@'"; $@; [ $? -ne 0 ] && { echo "Cannot run '$@'";  exit 1; }
+}
 
-crypt -o sdd11 /home/valery/.shared/.bin
+get()
+{
+   lsblk -l -o type,name,UUID | grep -E "^part .* $1$" | awk '{ print $2 }'
+}
+
+[ ! -z $1 ] && { run crypt -c; exit 0; }
+
+dst=$(get $guid_dst); [ -z "$dst" ] && { echo "Cannot find destination device"; exit 1; }
+
+key="$HOME/$path_bin"
+if [ -f $key ] ; then
+   run crypt -o $dst $key
+   exit 0
+fi
+
+[ -z "$(get $guid_src)" ] && { echo "Cannot find source device"; exit 1; }
+
+path_tmp=$(mktemp -d); [ ! -d $path_tmp ] && { echo "Cannot create temporary dir $path_tmp"; exit 1; }
+
+run sudo mount UUID=$guid_src $path_tmp
+
+key="$path_tmp/$path_bin"
+if [ -f $key ] ; then
+   run crypt -o $dst $key
+else
+   echo "Cannot define source file"
+fi
+
+run sudo umount $path_tmp
+run rmdir $path_tmp
+
+exit 0
 
