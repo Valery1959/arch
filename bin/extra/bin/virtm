@@ -67,6 +67,8 @@ run_backup()
   echo "Run 'virsh dumpxml $1 > $backup_vm_dir/${1}.xml'"
   $virsh dumpxml $1 > $backup_vm_dir/${1}.xml
 
+  [ -z "$2" ] && return # dump xml only
+
   declare -A processed
 
   for p in $src_paths
@@ -84,26 +86,44 @@ run_backup()
       run sudo $rsync $d $backup_vm_dir
     fi
   done
+
+  run 7z u $backup_dir/${1}.7z $backup_dir/${1}
+  run rm -r $backup_dir/${1}
 }
 
 run_restore()
 {
-  xml_file=$backup_dir/${1}/${1}.xml; [ ! -f $xml_file ] && { echo "No $xml_file found for $1"; exit 1; }
+  dir_7z="${backup_dir}/${1}"
+  src_7z="${dir_7z}.7z"
+  xml_7z="${1}/${1}.xml"
+  xml_vm="$backup_dir/$xml_7z"
 
-  src_objs=$(ls $backup_dir/${1} 2>/dev/null); [ -z "$src_objs" ] && { echo "No backup files foundi for $1"; exit 1; }
+  [ -f "$src_7z" ] || { echo "Backup file '$src_7z' does not exist"; exit 1; }
+  [ -d "$dir_7z" ] && run rm -r "$dir_7z"
+
+  run 7z x -o${backup_dir} $src_7z $xml_7z; [ -f $xml_vm ] || { echo "No $xml_vm found for $1"; exit 1; }
+
+  if [ ! -z "$2" ] ; then # restore images
+    run 7z x -o${images_dir} $src_7z -x!$xml_7z
+
+    run find "$images_dir/${1}" -type d -exec chmod 0770 {} +
+    run find "$images_dir/${1}" -type f -exec chmod 0660 {} +
+
+    objs=$(\ls $images_dir/${1})
+
+    run sudo find "$images_dir/${1}" -exec chown root:root {} +
+    for obj in $objs
+    do
+      run sudo mv ${images_dir}/$1/$obj ${images_dir}
+    done
+    run sudo rmdir ${images_dir}/$1
+  fi
 
   run sudo virsh undefine --nvram --tpm $1 | awk '!/^$/'
+  run virsh --connect qemu:///system define $xml_vm | awk '!/^$/'
+  # run sudo virsh define --file $xml_vm | awk '!/^$/'
 
-  for p in $src_objs
-  do
-    [[ "$backup_dir/${1}/$p" == "$xml_file" ]] && continue
-    run sudo $rsync "$backup_dir/${1}/$p" "$images_dir"
-    run sudo find "$images_dir/$p" -type d -exec chmod 0770 {} +
-    run sudo find "$images_dir/$p" -type f -exec chmod 0660 {} +
-  done
-
-  run virsh --connect qemu:///system define $xml_file | awk '!/^$/'
-  # run sudo virsh define --file $xml_file | awk '!/^$/'
+  run rm -r $dir_7z
 }
 
 start_stop()
@@ -161,8 +181,8 @@ backup_restore()
   do
     if has_state $vm "$SHUTOFF"; then
       case $1 in 
-        backup)  run_backup  $vm ;;
-        restore) run_restore $vm ;;
+        backup)  run_backup  $vm $2 ;;
+        restore) run_restore $vm $2 ;;
       esac
     else
       echo "VM $vm is $RUNNING, skipping $1"
@@ -173,8 +193,10 @@ backup_restore()
 case $1 in
   start)   s_cmd=start;    do_check="$RUNNING"; do_egrep="$SHUTOFF" ;;
   stop)    s_cmd=shutdown; do_check="$SHUTOFF"; do_egrep="$RUNNING" ;;
-  backup)  b_cmd=$1 ;;
-  restore) b_cmd=$1 ;;
+  backup)  b_cmd=$1; b_img="1" ;; # backup images and dump xml file
+  restore) b_cmd=$1; b_img="1" ;; # restore images and define xml file
+  dumpxml) b_cmd="backup"  ;;     # dump xml file
+  xml)     b_cmd="restore" ;;     # define xml file
   *) echo "Unknown option $1"; exit 1 ;;
 esac
 
@@ -195,7 +217,7 @@ if [ ! -z $b_cmd ] ; then
   [ ! -d $images_dir ] && { echo "Directory $images_dir does not exist"; exit 1; }
   [ ! -d $backup_dir ] && { echo "Directory $backup_dir does not exist"; exit 1; }
 
-  backup_restore "$b_cmd"
+  backup_restore "$b_cmd" "$b_img"
 else
   start_stop "$s_cmd" "$do_check" "$do_egrep"
 fi
