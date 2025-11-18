@@ -6,7 +6,7 @@ SHUTOFF="shut off"
 RUNNING="running"
 
 virsh="sudo virsh"
-rsync="rsync -a"
+rsync="sudo rsync -a"
 
 run()
 {
@@ -62,33 +62,39 @@ run_backup()
     [[ ! $p =~ $images_dir ]] && { echo "$p is not on $images_dir"; exit 1 ; }
   done
 
-  backup_vm_dir=$backup_dir/$1; run mkdir -p $backup_vm_dir
+  dst_zip=$backup_dir/${1}.7z
+  tmp_dir=$backup_dir/$1;
+  tmp_xml=$tmp_dir/${1}.xml
 
-  echo "Run 'virsh dumpxml $1 > $backup_vm_dir/${1}.xml'"
-  $virsh dumpxml $1 > $backup_vm_dir/${1}.xml
+  run mkdir -p $tmp_dir
+  echo "Run 'virsh dumpxml $1 > $tmp_xml'"
+  $virsh dumpxml $1 > $tmp_xml
 
-  [ -z "$2" ] && return # dump xml only
+  if [ ! -z "$2" ] ; then # backup images
 
-  declare -A processed
+    declare -A processed
 
-  for p in $src_paths
-  do
-    o=$(echo $p | sed -e "s|$images_dir/||g" | awk -F'/' '{ print $1 }'); [ -z $o ] && { echo "Cannot get $p"; exit 1; }
-    d=$images_dir/$o; [ ! -z ${processed[$d]} ] && continue; processed[$d]=1
-    if [ -d $d ] ; then
-      run mkdir -p $backup_vm_dir/$o
-      for c in $d/*
-      do
-        run sudo $rsync $c $backup_vm_dir/$o
-      done
-      run sudo $rsync $d $backup_vm_dir
-    else
-      run sudo $rsync $d $backup_vm_dir
-    fi
-  done
+    for p in $src_paths
+    do
+      o=$(echo $p | sed -e "s|$images_dir/||g" | awk -F'/' '{ print $1 }'); [ -z $o ] && { echo "Cannot get $p"; exit 1; }
+      d=$images_dir/$o; [ ! -z ${processed[$d]} ] && continue; processed[$d]=1
 
-  run 7z u $backup_dir/${1}.7z $backup_dir/${1}
-  run rm -r $backup_dir/${1}
+      if [ -d $d ] ; then
+        run mkdir -p $tmp_dir/$o
+        for c in $d/*
+        do
+          run $rsync $c $tmp_dir/$o
+        done
+        run $rsync $d $tmp_dir
+      else
+        run $rsync $d $tmp_dir
+      fi
+    done
+  fi
+
+  run 7z u $backup_dir/${1}.7z $tmp_dir
+
+  [ -d "$tmp_dir" ] && run rm -r "$tmp_dir"
 }
 
 run_restore()
@@ -106,8 +112,8 @@ run_restore()
   if [ ! -z "$2" ] ; then # restore images
     run 7z x -o${images_dir} $src_7z -x!$xml_7z
 
-    run find "$images_dir/${1}" -type d -exec chmod 0770 {} +
-    run find "$images_dir/${1}" -type f -exec chmod 0660 {} +
+    run find "$images_dir/${1}" -type d -exec chmod 0777 {} +
+    run find "$images_dir/${1}" -type f -exec chmod 0666 {} +
 
     objs=$(\ls $images_dir/${1})
 
@@ -123,7 +129,7 @@ run_restore()
   run virsh --connect qemu:///system define $xml_vm | awk '!/^$/'
   # run sudo virsh define --file $xml_vm | awk '!/^$/'
 
-  run rm -r $dir_7z
+  [ -d "$dir_7z" ] && run rm -r "$dir_7z"
 }
 
 start_stop()
@@ -196,7 +202,7 @@ case $1 in
   backup)  b_cmd=$1; b_img="1" ;; # backup images and dump xml file
   restore) b_cmd=$1; b_img="1" ;; # restore images and define xml file
   dumpxml) b_cmd="backup"  ;;     # dump xml file
-  xml)     b_cmd="restore" ;;     # define xml file
+  xml)     b_cmd="restore" ;;     # connect to vm manager and define xml file
   *) echo "Unknown option $1"; exit 1 ;;
 esac
 
