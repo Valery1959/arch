@@ -112,21 +112,23 @@ run_restore()
   if [ ! -z "$2" ] ; then # restore images
     run 7z x -o${images_dir} $src_7z -x!$xml_7z
 
-    run find "$images_dir/${1}" -type d -exec chmod 0777 {} +
-    run find "$images_dir/${1}" -type f -exec chmod 0666 {} +
+    run find "$images_dir/${1}" -mindepth 1 -type d -exec chmod 0777 {} +
+    run find "$images_dir/${1}" -mindepth 2 -type f -exec chmod 0666 {} +
+    run find "$images_dir/${1}" -maxdepth 1 -type f -exec chmod 0660 {} +
 
     objs=$(\ls $images_dir/${1})
 
     run sudo find "$images_dir/${1}" -exec chown root:root {} +
     for obj in $objs
     do
+      [ -e "${images_dir}/$obj" ] && run sudo rm -r "${images_dir}/$obj"
       run sudo mv ${images_dir}/$1/$obj ${images_dir}
     done
     run sudo rmdir ${images_dir}/$1
   fi
 
-  run sudo virsh undefine --nvram --tpm $1 | awk '!/^$/'
   run virsh --connect qemu:///system define $xml_vm | awk '!/^$/'
+  # run sudo virsh undefine --nvram --tpm $1 | awk '!/^$/'
   # run sudo virsh define --file $xml_vm | awk '!/^$/'
 
   [ -d "$dir_7z" ] && run rm -r "$dir_7z"
