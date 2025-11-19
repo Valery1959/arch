@@ -114,7 +114,7 @@ run_restore()
 
     run find "$images_dir/${1}" -mindepth 1 -type d -exec chmod 0777 {} +
     run find "$images_dir/${1}" -mindepth 2 -type f -exec chmod 0666 {} +
-    run find "$images_dir/${1}" -maxdepth 1 -type f -exec chmod 0660 {} +
+    run find "$images_dir/${1}" -maxdepth 1 -type f -exec chmod 0600 {} +
 
     objs=$(\ls $images_dir/${1})
 
