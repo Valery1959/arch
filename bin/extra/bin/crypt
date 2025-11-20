@@ -27,9 +27,13 @@ set_mapdev()
    mapdev="/dev/mapper/$map_id"
 }
 
-# home subdirs and files to be crypted
+# home subdirs and files to be mounted
 home_crypt_sdirs=".ssh/extra .neko .mars"
 home_crypt_files=".ssh/config"
+
+# /var/lib subdirs to be mounted
+vlib="/var/lib"
+vlib_crypt_sdirs="libvirt/images"
 
 enter_passwd()
 {
@@ -73,6 +77,10 @@ close_device()
    [ ! -b $mapdev ] && set_mapdev $m_map_secondary
    [ ! -b $mapdev ] && { echo "Neither $m_map_principal or $m_map_secondary do not mapped"; exit 1; }
 
+   for crypt_sdir in $vlib_crypt_sdirs
+   do
+     umount_device "$vlib/$crypt_sdir"
+   done
    for crypt_file in $home_crypt_files
    do
      umount_device "$HOME/$crypt_file"
@@ -220,6 +228,16 @@ open_device()
       for crypt_file in $home_crypt_files
       do
          bind_cryptedfile "$dmount/home/${cuser}/$crypt_file" "$HOME/$crypt_file"
+      done
+
+      # bound crypted /var/lib sub directores
+      for crypt_sdir in $vlib_crypt_sdirs
+      do
+         if [[ $(ls -A "$vlib/$crypt_sdir" | wc -l) -ne 0 ]] ; then
+            echo "$vlib/$crypt_sdir is not empty, skipping bound $dmount/$crypt_sdir to $vlib/$crypt_sdir ..."
+            continue
+         fi
+         bind_directories "$dmount/$crypt_sdir" "$vlib/$crypt_sdir"
       done
    fi
 }
