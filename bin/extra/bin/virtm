@@ -91,10 +91,11 @@ run_backup()
       fi
     done
   fi
+  run sudo chown -R $(id -nu):$(id -ng) $tmp_dir
 
   run 7z u $backup_dir/${1}.7z $tmp_dir
 
-  [ -d "$tmp_dir" ] && run rm -r "$tmp_dir"
+  [ -d "$tmp_dir" ] && run rm -rf "$tmp_dir"
 }
 
 run_restore()
