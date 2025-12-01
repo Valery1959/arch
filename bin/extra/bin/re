@@ -1,6 +1,8 @@
 #!/bin/bash
 
-reboot
+cmd="reboot"
+
+[ ! -z "$SSH_CLIENT" ] && sudo $cmd || $cmd
 
 exit 0
 

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-poweroff
+cmd="poweroff"
+
+[ ! -z "$SSH_CLIENT" ] && sudo $cmd || $cmd
 
 exit 0
 
