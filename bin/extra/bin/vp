@@ -1,6 +1,7 @@
 #!/bin/bash
 
-$HOME/.neko/launcher
+#$HOME/.neko/launcher
+$HOME/.v2ray/v2rayN
 
 exit 0
 
