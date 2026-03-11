@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+
+script_dir=$(cd $(dirname $0); pwd -P)
+
+source $script_dir/utils.sh
+
+echo "Updating yay and applications installed by yay"
+
+run reinstall_yay
+
+exit 0
+
+
