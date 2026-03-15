@@ -28,7 +28,7 @@ set_mapdev()
 }
 
 # home subdirs and files to be mounted
-home_crypt_sdirs=".ssh/extra .neko .mars"
+home_crypt_sdirs=".ssh/extra .v2ray .neko .mars"
 home_crypt_files=".ssh/config"
 
 # /var/lib subdirs to be mounted
