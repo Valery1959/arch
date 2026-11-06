@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# mount local dir to remote dir on remote host by using ssh port forwarding
+#
+# The following entities should be defined in ssh config on local host
+# Host <name to be passed to script as a first argument> 
+# HostName <name or ip of remote host>
+# IdentityFile <pass to ssh private key> 
+# User <remote user name> 
+# PORT <remote ssh port number>
+#
+
+get_pswd()
+{
+  read -rs -p "Enter password for $user: " pswd; echo ""
+  if [[ -z "$pswd"  ]] ; then
+      echo "Sorry, password should not be empty."
+      get_pswd
+  fi 
+} 
+
+show_ssh_forward_processes()
+{
+   pgrep -fa "$forward_cmd"; return $?
+}
+
+kill_ssh_forward_processes()
+{
+   pkill -f  "$forward_cmd" > /dev/null 2>&1
+   pgrep -fa "$forward_cmd" > /dev/null 2>&1
+   if [ $? -eq 0 ] ; then
+      echo "failed, cannot kill some processes"
+      exit 1
+   fi
+   echo "OK"
+}
+
+dir_error()
+{
+  echo "Directory $1 does not exist or lacks permissions at $2 host"; exit 0
+}
+
+host="$1" # remote host
+sdir="$2" # local dir to be exported to remote host to mount
+rdir="$3" # remote dir to be mount to local dir
+port="$4" # remote forwarding port
+pswd="$5" # user passwd at this local host
+user="$(id -un)" # user name at this local host
+
+[[ "$sdir" == "-" ]] && rdir=$sdir # unbind and unmount directory 
+
+[ -z $host ] && { echo "You should pass host name as first argument "; exit 1; }
+[ -z $sdir ] && { echo "You should pass local dir as second argument"; exit 1; }
+[ -z $rdir ] && { echo "You should pass remote dir as third argument"; exit 1; }
+[ -z $port ] && port=9999  # default forwarding port
+
+# Command to forward port onto remote host
+forward_cmd="ssh -fNT -R $port:localhost:22 $host"
+
+if [[ "$sdir" == "-" ]] ; then # unbind and unmount
+   if show_ssh_forward_processes ; then
+      printf "%s" "Killing all processes above ... "
+   else
+      echo "Nothing to do"; exit 0
+   fi
+   kill_ssh_forward_processes
+   exit 0
+fi
+
+# check remote host
+ssh $host "exit 0" || { echo "Cannot connect to $host"; exit 0; } 
+ 
+# check local and remote dirs
+test -d $sdir && test -w $sdir || dir_error $sdir $(hostname -s)
+ssh $host "test -d $rdir && test -w $rdir" || dir_error $rdir $host 
+
+# unbind already forwarded port if any
+if show_ssh_forward_processes ; then
+   read -r -p "Kill the above process(es) to free up forwarding ports? (y/n) " answer
+   [[ $answer == [yY] ]] || { echo "exitting, as port is busy" ; exit 1; }
+   printf "%s" "Killing all processes above ... "
+   kill_ssh_forward_processes
+fi
+
+# run ssh port forward at remote host, check result
+$forward_cmd || { echo "Cannot run $forward_cmd"; exit 1; }
+
+# get local user password if not passed
+[ -z $pswd ] && get_pswd
+
+# bind remote directory to local directory, check result
+echo $pswd | ssh $host "sshfs -p $port -o idmap=user,password_stdin $user@127.0.0.1:$sdir $rdir"
+[ $? -eq 0 ] || { echo "Cannot mount remote dir $host:$rdir to $sdir"; exit 1; }
+
+exit 0
