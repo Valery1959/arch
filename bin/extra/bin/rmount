@@ -7,12 +7,15 @@
 # HostName <name or ip of remote host>
 # IdentityFile <pass to ssh private key> 
 # User <remote user name> 
-# PORT <remote ssh port number>
+# ServerAliveInterval 15 
+# ServerAliveCountMax 3 
+# RemoteForward <forward port at remote host> localhost:22
+# Port <remote ssh port number>
 #
 
 get_pswd()
 {
-  read -rs -p "Enter password for $user: " pswd; echo ""
+  read -rs -p "Enter password for local user $user: " pswd; echo ""
   if [[ -z "$pswd"  ]] ; then
       echo "Sorry, password should not be empty."
       get_pswd
@@ -21,13 +24,13 @@ get_pswd()
 
 show_ssh_forward_processes()
 {
-   pgrep -fa "$forward_cmd"; return $?
+   pgrep -fa "$ssh_forward_process"; return $?
 }
 
 kill_ssh_forward_processes()
 {
-   pkill -f  "$forward_cmd" > /dev/null 2>&1
-   pgrep -fa "$forward_cmd" > /dev/null 2>&1
+   pkill -f  "$ssh_forward_process" > /dev/null 2>&1
+   pgrep -fa "$ssh_forward_process" > /dev/null 2>&1
    if [ $? -eq 0 ] ; then
       echo "failed, cannot kill some processes"
       exit 1
@@ -35,16 +38,22 @@ kill_ssh_forward_processes()
    echo "OK"
 }
 
+# print directory error and exit 
 dir_error()
 {
   echo "Directory $1 does not exist or lacks permissions at $2 host"; exit 0
 }
 
+# run command remotely via ssh 
+rcmd()
+{
+   ssh -o ClearAllForwardings=yes $host $@; return $?
+}
+
 host="$1" # remote host
 sdir="$2" # local dir to be exported to remote host to mount
 rdir="$3" # remote dir to be mount to local dir
-port="$4" # remote forwarding port
-pswd="$5" # user passwd at this local host
+pswd="$4" # optional user passwd at this local host
 user="$(id -un)" # user name at this local host
 
 [[ "$sdir" == "-" ]] && rdir=$sdir # unbind and unmount directory 
@@ -52,10 +61,10 @@ user="$(id -un)" # user name at this local host
 [ -z $host ] && { echo "You should pass host name as first argument "; exit 1; }
 [ -z $sdir ] && { echo "You should pass local dir as second argument"; exit 1; }
 [ -z $rdir ] && { echo "You should pass remote dir as third argument"; exit 1; }
-[ -z $port ] && port=9999  # default forwarding port
 
-# Command to forward port onto remote host
-forward_cmd="ssh -fNT -R $port:localhost:22 $host"
+# Command to establish ssh session to forward port onto remote host
+# Some properties should be specified in ssh config, see above
+ssh_forward_process="ssh -fNT $host"
 
 if [[ "$sdir" == "-" ]] ; then # unbind and unmount
    if show_ssh_forward_processes ; then
@@ -64,15 +73,33 @@ if [[ "$sdir" == "-" ]] ; then # unbind and unmount
       echo "Nothing to do"; exit 0
    fi
    kill_ssh_forward_processes
+   rcmd "pkill sshfs"
    exit 0
 fi
 
-# check remote host
-ssh $host "exit 0" || { echo "Cannot connect to $host"; exit 0; } 
+# get some properties from ssh config, and check it
+shopt -s nocasematch
+
+while read -r key value; do
+   case "${key,,}" in
+      ServerAliveInterval) aint="$value" ;;
+      ServerAliveCountMax) acnt="$value" ;;
+      RemoteForward)       port="$(echo $value | cut -d' ' -f1)" ;;
+   esac
+done < <(ssh -G $host | grep -E -i '^(ServerAliveInterval|ServerAliveCountMax|RemoteForward) ')
+
+shopt -u nocasematch
+
+[ -z $aint ] && { echo "Cannot get ServerAliveInterval for $host host from ssh config"; exit 1; }
+[ -z $acnt ] && { echo "Cannot get ServerAliveCountMax for $host host from ssh config"; exit 1; }
+[ -z $port ] && { echo "Cannot get RemotePort for $host host from ssh config"; exit 1; }
+
+# check remote host availability
+rcmd "exit 0" || { echo "Cannot connect to $host"; exit 0; } 
  
 # check local and remote dirs
-test -d $sdir && test -w $sdir || dir_error $sdir $(hostname -s)
-ssh $host "test -d $rdir && test -w $rdir" || dir_error $rdir $host 
+      test -d $sdir && test -w $sdir  || dir_error $sdir $(hostname -s)
+rcmd "test -d $rdir && test -w $rdir" || dir_error $rdir $host 
 
 # unbind already forwarded port if any
 if show_ssh_forward_processes ; then
@@ -82,14 +109,40 @@ if show_ssh_forward_processes ; then
    kill_ssh_forward_processes
 fi
 
+# sanity unmount
+rcmd "pkill sshfs"
+#rcmd "fusermount -u $rdir" 2>/dev/null
+
 # run ssh port forward at remote host, check result
-$forward_cmd || { echo "Cannot run $forward_cmd"; exit 1; }
+$ssh_forward_process || { echo "Cannot run $ssh_forward_process"; exit 1; }
 
 # get local user password if not passed
 [ -z $pswd ] && get_pswd
 
-# bind remote directory to local directory, check result
-echo $pswd | ssh $host "sshfs -p $port -o idmap=user,password_stdin $user@127.0.0.1:$sdir $rdir"
+# bind remote directory to local directoryi by High-Performance Mount Command
+# by use aggressive caching and performance flags
+# 
+# Why These Flags Maximize Speed:
+#
+# 1. Ciphers=aes128-gcm@openssh.com: Switches the encryption algorithm to AES-128-GCM,
+#    which supports hardware acceleration on almost all modern CPUs.
+#    It is significantly faster than the default ChaCha20 or AES-256 cipher while remaining fully secure.
+# 2. compression=no: Disables SSH compression. Unless your internet connection is slower than 10–20 Mbps,
+#    compressing files before sending them wastes CPU cycles and slows down modern broadband or local networks.
+# 3. cache=yes / kernel_cache / auto_cache: These tell your local operating system to stop asking the remote
+#    server for file info (like size, permissions, or folder structure) every time you click a file.
+#    It caches metadata locally, making folder navigation instantaneous.
+# 4. reconnect: Automatically establishes the connection if it drops momentarily, saving you from manual unmounting and remounting.
+#
+o_alive="ServerAliveInterval=$aint,ServerAliveCountMax=$acnt"
+options="idmap=user,password_stdin,StrictHostKeyChecking=no"
+options="$options,cache=yes,kernel_cache,compression=no"
+options="$options,auto_cache,reconnect,Ciphers=aes128-gcm@openssh.com"
+options="$options,$o_alive"
+
+echo "ssh alive options: $o_alive"
+echo "ssh options: $options"
+echo $pswd | rcmd "sshfs -p $port -o $options $user@127.0.0.1:$sdir $rdir"
 [ $? -eq 0 ] || { echo "Cannot mount remote dir $host:$rdir to $sdir"; exit 1; }
 
 exit 0
