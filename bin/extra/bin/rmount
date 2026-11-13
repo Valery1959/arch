@@ -86,6 +86,9 @@ user="$(id -un)" # user name at this local host
 # check remote host availability
 rcmd "exit 0" || exit 1
 
+# check sshfs at remote host
+rcmd type -P sshfs > /dev/null || { echo "$host: sshfs does not exist or executable"; exit 1; }
+
 # get some properties from ssh config, and check it
 shopt -s nocasematch
 
@@ -155,8 +158,14 @@ if show_sshfs_remote_process > /dev/null ; then
    sshfs_remote_process=1
 else
    # remote dir should exist and should be empty
-   rcmd "test -d $rdir && test -w $rdir" || dir_error $rdir $host
-   [ -n "$(rcmd ls -A $rdir)" ] && { echo "Directory $host:$rdir is not empty"; exit 1; }
+   pdir=$(rcmd dirname $rdir)
+   rcmd "test -d $pdir && test -w $pdir" || dir_error $pdir $host
+
+   if rcmd "test -d $rdir && test -w $rdir" ; then
+      [ -n "$(rcmd ls -A $rdir)" ] && { echo "Directory $host:$rdir is not empty"; exit 1; }
+   else
+      rcmd "mkdir $rdir" > /dev/null 2>&1 || { echo "$host: Cannot create $rdir"; exit 1; }
+   fi
 fi
 
 # unbind already forwarded port if any
